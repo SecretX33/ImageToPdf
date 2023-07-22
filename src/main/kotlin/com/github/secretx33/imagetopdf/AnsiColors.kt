@@ -1,0 +1,15 @@
+package com.github.secretx33.imagetopdf
+
+const val ANSI_RESET = "\u001b[0m"
+const val ANSI_BLACK = "\u001b[30m"
+const val ANSI_BLUE = "\u001b[34m"
+const val ANSI_CYAN = "\u001b[36m"
+const val ANSI_GREEN = "\u001b[32m"
+const val ANSI_PURPLE = "\u001b[35m"
+const val ANSI_RED = "\u001b[31m"
+const val ANSI_WHITE = "\u001b[37m"
+const val ANSI_YELLOW = "\u001b[33m"
+const val ANSI_BOLD = "\\u001b[1m"
+const val ANSI_REVERSE = "\\u001b[7m"
+const val ANSI_UNDERLINE = "\\u001b[4m"
+const val ANSI_CLEAR_SCREEN = "\\u001b[2J"
