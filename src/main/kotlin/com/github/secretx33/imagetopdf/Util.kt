@@ -1,11 +1,14 @@
 package com.github.secretx33.imagetopdf
 
 import com.github.secretx33.imagetopdf.exception.QuitApplicationException
+import org.jnativehook.GlobalScreen
 import java.lang.invoke.MethodHandles
 import java.nio.file.Path
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
+import java.util.logging.Level
+import java.util.logging.Logger
 import kotlin.io.path.fileSize
 import kotlin.time.Duration
 
@@ -47,4 +50,16 @@ fun Duration.formattedSeconds(): String {
     }
     val format = DecimalFormat(pattern, DecimalFormatSymbols(Locale.US))
     return format.format(secondsDouble)
+}
+
+/**
+ * Bye bye, annoying `info` logger from JNativeHook.
+ */
+fun disableAnnoyingJnativehookLogger() {
+    // Get the logger for "org.jnativehook" and set the level to warning.
+    val logger = Logger.getLogger(GlobalScreen::class.java.getPackage().name)
+    logger.level = Level.WARNING
+
+    // Don't forget to disable the parent handlers.
+    logger.useParentHandlers = false
 }

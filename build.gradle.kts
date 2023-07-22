@@ -19,6 +19,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.apache.pdfbox:pdfbox:3.0.0-beta1")
+    implementation("com.1stleg:jnativehook:2.1.0")
 }
 
 tasks.test { useJUnitPlatform() }
@@ -45,7 +46,7 @@ tasks.withType<KotlinCompile> {
     }
 }
 
-val mainClassName = "com.github.secretx33.imagetopdf.WhisperJsonToSrtKt"
+val mainClassName = "com.github.secretx33.imagetopdf.ImageToPdfKt"
 
 application {
     mainClass.set(mainClassName)
