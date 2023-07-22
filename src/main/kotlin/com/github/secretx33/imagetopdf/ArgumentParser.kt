@@ -42,17 +42,19 @@ private fun getSettings(files: Set<Path>): Settings {
     val index = AtomicInteger(1)
 
     val combineMode = if (files.size >= 2) {
-        print("${index.getAndIncrement()}. You dragged more than one file, do you want to combine them into a single PDF file (y/n) (default: y)? ")
+        print("${index.getColoredIndex()} You dragged more than one file, do you want to combine them into a single PDF file (y/n) (default: ${ANSI_GREEN}y$ANSI_RESET)? ")
         if (readBool(true)) CombineMode.SINGLE_FILE else CombineMode.MULTIPLE_FILES
     } else {
         CombineMode.SINGLE_FILE
     }
 
-    print("${index.getAndIncrement()}. Reduce the image resolution by this factor (default: 1.0 -> do not reduce): ")
+    print("${index.getColoredIndex()} Reduce the image resolution by this factor (default: ${ANSI_GREEN}1.0$ANSI_RESET -> do not reduce): ")
     val scaleFactor = readDouble(1.0)
 
-    print("${index.getAndIncrement()}. Choose the image scale factor in the PDF, the smaller the value, the greater the image clarity (default: 0.5): ")
+    print("${index.getColoredIndex()} Choose the image scale factor in the PDF, the smaller the value, the greater the image clarity (default: ${ANSI_GREEN}0.5$ANSI_RESET): ")
     val renderFactor = readDouble(0.5)
+
+    println()
 
     return Settings(
         files = files,
@@ -61,6 +63,8 @@ private fun getSettings(files: Set<Path>): Settings {
         imageRenderFactor = renderFactor,
     )
 }
+
+private fun AtomicInteger.getColoredIndex(): String = "$ANSI_BLUE${getAndIncrement()}.$ANSI_RESET"
 
 private fun readString(): String = readln()
 

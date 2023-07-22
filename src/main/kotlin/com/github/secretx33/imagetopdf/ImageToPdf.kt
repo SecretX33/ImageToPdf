@@ -44,7 +44,7 @@ private fun printGreetings() {
 }
 
 private fun createPdfs(settings: Settings) {
-    println("Creating PDFs, sit back and relax, this can take a while...")
+    println("${ANSI_PURPLE}Generating PDFs, sit back and relax, this can take a while...${ANSI_RESET}")
     if (settings.combineMode == CombineMode.SINGLE_FILE) {
         createSingleFile(settings)
     } else {
@@ -73,13 +73,13 @@ private fun createMultipleFiles(settings: Settings) {
 }
 
 private fun notifyPdfCreated(file: Path) =
-    println("Created PDF $ANSI_GREEN'${file.name}'$ANSI_RESET $ANSI_PURPLE(${file.formattedFileSize()})$ANSI_RESET at $ANSI_GREEN'${file.parent.absolutePathString()}'$ANSI_RESET")
+    println("${ANSI_PURPLE}Created PDF $ANSI_GREEN'${file.name}'$ANSI_PURPLE at $ANSI_GREEN'${file.parent.absolutePathString()}' $ANSI_CYAN(${file.formattedFileSize()})$ANSI_RESET")
 
 private fun printSuccessMessage(settings: Settings, duration: Duration) {
     val message = when {
-        settings.files.size >= 2 && settings.combineMode == CombineMode.SINGLE_FILE -> "Successfully created a combined PDF from ${settings.files.size} images"
-        settings.files.size >= 2 && settings.combineMode == CombineMode.MULTIPLE_FILES -> "Successfully created a PDF for each of the ${settings.files.size} images"
+        settings.files.size >= 2 && settings.combineMode == CombineMode.SINGLE_FILE -> "Successfully created the PDF from $ANSI_GREEN${settings.files.size}$ANSI_PURPLE images"
+        settings.files.size >= 2 && settings.combineMode == CombineMode.MULTIPLE_FILES -> "Successfully created a PDF for each of the $ANSI_GREEN${settings.files.size}$ANSI_PURPLE images"
         else -> "Successfully created the PDF"
     }
-    println("$message in ${duration.inWholeMilliseconds}ms.")
+    println("$ANSI_PURPLE$message in $ANSI_CYAN${duration.formattedSeconds()}s$ANSI_RESET")
 }

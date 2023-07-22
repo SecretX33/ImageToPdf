@@ -3,8 +3,11 @@ package com.github.secretx33.imagetopdf
 import com.github.secretx33.imagetopdf.exception.QuitApplicationException
 import java.lang.invoke.MethodHandles
 import java.nio.file.Path
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.util.Locale
 import kotlin.io.path.fileSize
+import kotlin.time.Duration
 
 private val thisClass = MethodHandles.lookup().lookupClass()
 
@@ -28,4 +31,20 @@ private fun Long.bytesToHumanReadableSize(): String = when {
     this <= 0xfffccccccccccccL shr 10 -> "%.1f TB".format(Locale.ROOT, toDouble() / (0x1 shl 40))
     this <= 0xfffccccccccccccL -> "%.1f PB".format(Locale.ROOT, (this shr 10).toDouble() / (0x1 shl 40))
     else -> "%.1f EB".format(Locale.ROOT, (this shr 20).toDouble() / (0x1 shl 40))
+}
+
+/**
+ * Returns a string representation of the duration in seconds, with increased precision when the time is below one
+ * second.
+ *
+ * @return a formatted string representation of the duration in seconds.
+ */
+fun Duration.formattedSeconds(): String {
+    val secondsDouble = inWholeMilliseconds.toDouble() / 1000.0
+    val pattern = when {
+        inWholeSeconds <= 0 -> "#.##"
+        else -> "#,###.#"
+    }
+    val format = DecimalFormat(pattern, DecimalFormatSymbols(Locale.US))
+    return format.format(secondsDouble)
 }
