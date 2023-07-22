@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
     kotlin("jvm") version "1.9.0"
+    kotlin("kapt") version "1.9.0"
 //    id("org.beryx.runtime") version "1.13.0"
     application
 }
@@ -20,6 +21,14 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.apache.pdfbox:pdfbox:3.0.0-beta1")
     implementation("com.1stleg:jnativehook:2.1.0")
+    implementation("info.picocli:picocli:4.7.4")
+    kapt("info.picocli:picocli-codegen:4.7.4")
+}
+
+kapt {
+    arguments {
+        arg("project", "${project.group}/${project.name}")
+    }
 }
 
 tasks.test { useJUnitPlatform() }

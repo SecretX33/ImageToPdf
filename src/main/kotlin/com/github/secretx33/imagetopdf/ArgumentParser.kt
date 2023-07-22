@@ -1,32 +1,58 @@
 package com.github.secretx33.imagetopdf
 
-import com.github.secretx33.imagetopdf.model.CombineMode
+import com.github.secretx33.imagetopdf.model.CliParams
 import com.github.secretx33.imagetopdf.model.Settings
+import com.github.secretx33.imagetopdf.model.toSettings
+import com.github.secretx33.imagetopdf.util.ANSI_GREEN
+import com.github.secretx33.imagetopdf.util.ANSI_PURPLE
+import com.github.secretx33.imagetopdf.util.ANSI_RED
+import com.github.secretx33.imagetopdf.util.ANSI_RESET
+import com.github.secretx33.imagetopdf.util.disableAnnoyingJnativehookLogger
+import com.github.secretx33.imagetopdf.util.exitSilently
+import com.github.secretx33.imagetopdf.util.exitWithMessage
+import com.github.secretx33.imagetopdf.util.getTextResource
 import org.jnativehook.GlobalScreen
 import org.jnativehook.NativeHookException
 import org.jnativehook.keyboard.NativeKeyEvent
 import org.jnativehook.keyboard.NativeKeyListener
+import picocli.CommandLine
 import java.io.Closeable
 import java.nio.file.Path
 import java.util.Collections
-import java.util.Locale
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.extension
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.notExists
 
 fun fetchSettings(args: Array<String>): Settings {
-    val files = args.mapTo(mutableSetOf(), ::Path)
-    validatePaths(files)
-    return getSettings(files)
+    val cliParams = getCliParams(args)
+    validatePaths(cliParams.files)
+    printGreetings()
+    return cliParams.toSettings().applyInteractive()
 }
 
-private fun validatePaths(paths: Set<Path>): Set<Path> {
+private fun getCliParams(args: Array<String>): CliParams {
+    val cliParams = CliParams()
+    val commandLine = CommandLine(cliParams).apply {
+        isOptionsCaseInsensitive = true
+        isCaseInsensitiveEnumValuesAllowed = true
+    }
+    commandLine.parseArgs(*args)
+    if (cliParams.usageHelpRequested) {
+        commandLine.usage(System.out)
+        exitSilently()
+    }
+    if (cliParams.versionInfoRequested) {
+        commandLine.printVersionHelp(System.out)
+        exitSilently()
+    }
+    return cliParams
+}
+
+private fun validatePaths(paths: Array<Path>) {
     var errorMessage: String? = null
 
     if (paths.isEmpty()) {
@@ -41,47 +67,16 @@ private fun validatePaths(paths: Set<Path>): Set<Path> {
         }
     }
     errorMessage?.let(::exitWithMessage)
-    return paths
 }
 
 private val supportedExtensions = setOf("jpg", "jpeg", "png")
 
 private fun Path.isSupportedFormat(): Boolean = supportedExtensions.any { extension.equals(it, ignoreCase = true) }
 
-private fun getSettings(files: Set<Path>): Settings {
-    val index = AtomicInteger(1)
+private fun printGreetings() = println("$ANSI_RESET${getTextResource("banner.txt")}${System.lineSeparator()}")
 
-    val combineMode = if (files.size >= 2) {
-        print("${index.getColoredIndex()} You dragged more than one file, do you want to combine them into a single PDF file (y/n) (default: ${ANSI_GREEN}y$ANSI_RESET)? ")
-        if (readBool(true)) CombineMode.SINGLE_FILE else CombineMode.MULTIPLE_FILES
-    } else {
-        CombineMode.SINGLE_FILE
-    }
-
-    print("${index.getColoredIndex()} Reduce the image resolution by this factor (default: ${ANSI_GREEN}1.0$ANSI_RESET -> do not reduce): ")
-    val scaleFactor = readDouble(1.0)
-
-    print("${index.getColoredIndex()} Choose the image scale factor in the PDF, the smaller the value, the greater the image clarity (default: ${ANSI_GREEN}0.5$ANSI_RESET): ")
-    val renderFactor = readDouble(0.5)
-
-    val reorderedFiles = if (files.size >= 2) {
-        print("${index.getColoredIndex()} Do you want to see/reorder the files (y/n) (default: ${ANSI_RED}n$ANSI_RESET)? ")
-        if (readBool(false)) reorderFiles(files) else files
-    } else {
-        files
-    }
-
-    println()
-
-    return Settings(
-        files = reorderedFiles,
-        combineMode = combineMode,
-        imageScaleFactor = scaleFactor,
-        imageRenderFactor = renderFactor,
-    )
-}
-
-private fun AtomicInteger.getColoredIndex(): String = "$ANSI_BLUE${getAndIncrement()}.$ANSI_RESET"
+private fun Settings.applyInteractive(): Settings =
+    if (files.size >= 2 && isInteractive) copy(files = reorderFiles(files)) else this
 
 private fun reorderFiles(files: Set<Path>): Set<Path> {
     val files = files.toMutableList()
@@ -111,6 +106,7 @@ private fun reorderFiles(files: Set<Path>): Set<Path> {
             ReorderOption.QUIT -> isReordering = false
         }
     }
+    println()
 
     keyListener.close()
     return files.toSet()
@@ -206,49 +202,4 @@ private class SimpleNativeKeyListener : NativeKeyListener, Closeable {
     private companion object {
         val INTERESTED_KEYS = setOf(NativeKeyEvent.VC_UP, NativeKeyEvent.VC_DOWN, NativeKeyEvent.VC_ENTER, NativeKeyEvent.VC_SPACE, NativeKeyEvent.VC_ESCAPE, NativeKeyEvent.VC_Q)
     }
-}
-
-/**
- * Read input methods.
- */
-private fun readString(): String = readln()
-
-private fun readDouble(default: Double? = null): Double {
-    var value: Double? = null
-    while (value == null) {
-        val valueAsString = readString()
-        if (default != null && valueAsString.isBlank()) {
-            println(default)
-            return default
-        }
-
-        value = valueAsString.toDoubleOrNull()?.takeIf { it.isFinite() }
-
-        if (value == null) {
-            printError("Invalid number, try again.")
-        }
-    }
-    return value
-}
-
-private fun readBool(default: Boolean? = null): Boolean {
-    var value: Boolean? = null
-    while (value == null) {
-        val valueAsString = readString().lowercase(Locale.US)
-        if (default != null && valueAsString.isBlank()) {
-            println(if (default) "y" else "n")
-            return default
-        }
-
-        value = when (valueAsString) {
-            "y", "yes", "true", "1" -> true
-            "n", "no", "false", "0" -> false
-            else -> null
-        }
-
-        if (value == null) {
-            printError("Invalid option, try again.")
-        }
-    }
-    return value
 }

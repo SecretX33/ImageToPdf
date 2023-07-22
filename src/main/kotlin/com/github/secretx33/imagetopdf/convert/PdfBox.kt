@@ -1,7 +1,7 @@
 package com.github.secretx33.imagetopdf.convert
 
-import com.github.secretx33.imagetopdf.exitWithMessage
 import com.github.secretx33.imagetopdf.model.Settings
+import com.github.secretx33.imagetopdf.util.exitWithMessage
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage

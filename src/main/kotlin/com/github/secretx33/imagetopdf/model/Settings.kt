@@ -7,6 +7,7 @@ data class Settings(
     val combineMode: CombineMode,
     val imageScaleFactor: Double,
     val imageRenderFactor: Double,
+    val isInteractive: Boolean,
 )
 
 enum class CombineMode {

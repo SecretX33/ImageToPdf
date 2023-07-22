@@ -1,4 +1,4 @@
-package com.github.secretx33.imagetopdf
+package com.github.secretx33.imagetopdf.util
 
 import com.github.secretx33.imagetopdf.exception.QuitApplicationException
 import org.jnativehook.GlobalScreen
@@ -15,6 +15,8 @@ import kotlin.time.Duration
 private val thisClass = MethodHandles.lookup().lookupClass()
 
 fun printError(message: String) = System.err.println(message)
+
+fun exitSilently(): Nothing = throw QuitApplicationException()
 
 fun exitWithMessage(message: String): Nothing = throw QuitApplicationException(message)
 

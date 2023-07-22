@@ -9,7 +9,7 @@ for %%A in (%*) do (
 
 echo Files: !files!
 
-java -Xms1m -Xmx256m -jar "D:\Local Disk\Users\User\Documents\GitHub\WhisperJsonToSrt\build\libs\WhisperJsonToSrt.jar" !files!
+java -Xms1m -Xmx1024m -jar "D:\Local Disk\Users\User\Documents\TrashProjects\ImageToPdf\build\libs\ImageToPdf.jar" !files!
 
 pause>nul
 endlocal

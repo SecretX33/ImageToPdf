@@ -1,4 +1,4 @@
-package com.github.secretx33.imagetopdf
+package com.github.secretx33.imagetopdf.util
 
 const val ANSI_RESET = "\u001b[0m"
 const val ANSI_BLACK = "\u001b[30m"

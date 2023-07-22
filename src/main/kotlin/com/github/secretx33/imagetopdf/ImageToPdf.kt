@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package com.github.secretx33.imagetopdf
 
 import com.github.secretx33.imagetopdf.convert.addImage
@@ -7,6 +5,13 @@ import com.github.secretx33.imagetopdf.convert.createPdf
 import com.github.secretx33.imagetopdf.exception.QuitApplicationException
 import com.github.secretx33.imagetopdf.model.CombineMode
 import com.github.secretx33.imagetopdf.model.Settings
+import com.github.secretx33.imagetopdf.util.ANSI_CYAN
+import com.github.secretx33.imagetopdf.util.ANSI_GREEN
+import com.github.secretx33.imagetopdf.util.ANSI_PURPLE
+import com.github.secretx33.imagetopdf.util.ANSI_RESET
+import com.github.secretx33.imagetopdf.util.formattedFileSize
+import com.github.secretx33.imagetopdf.util.formattedSeconds
+import com.github.secretx33.imagetopdf.util.printError
 import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
@@ -14,7 +19,6 @@ import kotlin.io.path.div
 import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
 import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 fun main(args: Array<String>) {
@@ -29,7 +33,6 @@ fun main(args: Array<String>) {
 }
 
 private fun bootstrapApplication(args: Array<String>) {
-    printGreetings()
     val settings = fetchSettings(args)
     val duration = measureTime {
         createPdfs(settings)
@@ -37,14 +40,8 @@ private fun bootstrapApplication(args: Array<String>) {
     printSuccessMessage(settings, duration)
 }
 
-private fun printGreetings() {
-    val banner = "$ANSI_RESET${getTextResource("banner.txt")}${System.lineSeparator().repeat(2)}"
-    val monitoringStatus = "${ANSI_PURPLE}==> Please answer the following questions to generate the PDFs$ANSI_RESET${System.lineSeparator()}"
-    println("$banner$monitoringStatus")
-}
-
 private fun createPdfs(settings: Settings) {
-    println("${ANSI_PURPLE}Generating PDFs, sit back and relax, this can take a while...${ANSI_RESET}")
+    println("${ANSI_PURPLE}Generating PDFs, sit back and relax, this can take a while...$ANSI_RESET")
     if (settings.combineMode == CombineMode.SINGLE_FILE) {
         createSingleFile(settings)
     } else {
@@ -53,7 +50,7 @@ private fun createPdfs(settings: Settings) {
 }
 
 private fun createSingleFile(settings: Settings) {
-    val pdfFile = (settings.files.first().parent ?: Path("")) / "${settings.files.first().nameWithoutExtension}.pdf"
+    val pdfFile = createPdfPath(settings.files.first())
     createPdf(pdfFile) {
         settings.files.forEach { picture ->
             addImage(picture, settings)
@@ -64,13 +61,15 @@ private fun createSingleFile(settings: Settings) {
 
 private fun createMultipleFiles(settings: Settings) {
     settings.files.forEach { picture ->
-        val pdfFile = (picture.parent ?: Path("")) / "${picture.nameWithoutExtension}.pdf"
+        val pdfFile = createPdfPath(picture)
         createPdf(pdfFile) {
             addImage(picture, settings)
         }
         notifyPdfCreated(pdfFile)
     }
 }
+
+private fun createPdfPath(picture: Path): Path = (picture.parent ?: Path("")) / "${picture.nameWithoutExtension}.pdf"
 
 private fun notifyPdfCreated(file: Path) =
     println("${ANSI_PURPLE}Created PDF $ANSI_GREEN'${file.name}'$ANSI_PURPLE at $ANSI_GREEN'${file.parent.absolutePathString()}' $ANSI_CYAN(${file.formattedFileSize()})$ANSI_RESET")
