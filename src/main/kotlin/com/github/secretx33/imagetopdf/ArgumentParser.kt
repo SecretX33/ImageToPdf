@@ -31,7 +31,10 @@ fun fetchSettings(args: Array<String>): Settings {
     val cliParams = getCliParams(args)
     validatePaths(cliParams.files)
     printGreetings()
-    return cliParams.toSettings().applyInteractive()
+    return cliParams.toSettings()
+        .applyInteractive()
+        .printSelectedOptions()
+        .also { println() }
 }
 
 private fun getCliParams(args: Array<String>): CliParams {
@@ -42,6 +45,7 @@ private fun getCliParams(args: Array<String>): CliParams {
     }
     commandLine.parseArgs(*args)
     if (cliParams.usageHelpRequested) {
+        println("${getTextResource("banner_help.txt")}${System.lineSeparator()}")
         commandLine.usage(System.out)
         exitSilently()
     }
@@ -81,7 +85,7 @@ private fun Settings.applyInteractive(): Settings =
 private fun reorderFiles(files: Set<Path>): Set<Path> {
     val files = files.toMutableList()
 
-    println("${ANSI_PURPLE}Hint: Use your keyboard ${ANSI_GREEN}UP$ANSI_PURPLE and ${ANSI_GREEN}DOWN$ANSI_PURPLE arrows to navigate the files, ${ANSI_GREEN}Enter$ANSI_PURPLE or ${ANSI_GREEN}Space$ANSI_PURPLE to swap their places$ANSI_PURPLE, and ${ANSI_GREEN}Q$ANSI_PURPLE or ${ANSI_GREEN}ESC$ANSI_PURPLE to confirm$ANSI_RESET")
+    println("${ANSI_PURPLE}Hint: Use your keyboard ${ANSI_GREEN}UP$ANSI_PURPLE and ${ANSI_GREEN}DOWN$ANSI_PURPLE arrows to navigate the files, ${ANSI_GREEN}Space$ANSI_PURPLE to swap their places$ANSI_PURPLE, and ${ANSI_GREEN}Q$ANSI_PURPLE, ${ANSI_GREEN}Enter$ANSI_PURPLE, or ${ANSI_GREEN}ESC$ANSI_PURPLE to confirm$ANSI_RESET")
 
     var isReordering = true
     var cursorIndex = 0
@@ -94,11 +98,9 @@ private fun reorderFiles(files: Set<Path>): Set<Path> {
             ReorderOption.UP -> cursorIndex = (cursorIndex - 1).coerceAtLeast(0)
             ReorderOption.DOWN -> cursorIndex = (cursorIndex + 1).coerceAtMost(files.lastIndex)
             ReorderOption.SELECT -> itemSelectedIndex = when (itemSelectedIndex) {
-                null -> cursorIndex
-                // Select current item
-                cursorIndex -> null
-                // Unselect current item
-                else -> {                                 // Swap items
+                null -> cursorIndex  // Select current item
+                cursorIndex -> null  // Unselect current item
+                else -> {            // Swap items
                     Collections.swap(files, cursorIndex, itemSelectedIndex)
                     null
                 }
@@ -106,14 +108,13 @@ private fun reorderFiles(files: Set<Path>): Set<Path> {
             ReorderOption.QUIT -> isReordering = false
         }
     }
-    println()
 
     keyListener.close()
     return files.toSet()
 }
 
 private fun printCurrentFilesForReorder(
-    files: MutableList<Path>,
+    files: Iterable<Path>,
     cursorIndex: Int,
     itemSelectedIndex: Int?,
 ) {
@@ -142,10 +143,21 @@ private fun getReorderOption(keyListener: SimpleNativeKeyListener): ReorderOptio
     return when (event.keyCode) {
         NativeKeyEvent.VC_UP -> ReorderOption.UP
         NativeKeyEvent.VC_DOWN -> ReorderOption.DOWN
-        NativeKeyEvent.VC_ENTER, NativeKeyEvent.VC_SPACE -> ReorderOption.SELECT
-        NativeKeyEvent.VC_ESCAPE, NativeKeyEvent.VC_Q -> ReorderOption.QUIT
+        NativeKeyEvent.VC_SPACE -> ReorderOption.SELECT
+        NativeKeyEvent.VC_ENTER, NativeKeyEvent.VC_ESCAPE, NativeKeyEvent.VC_Q -> ReorderOption.QUIT
         else -> exitWithMessage("Error: Key number '$event' is not mapped.")
     }
+}
+
+private fun Settings.printSelectedOptions(): Settings = apply {
+    printCurrentFiles(files)
+}
+
+private fun printCurrentFiles(files: Iterable<Path>) {
+    val fileSelector = files.mapIndexed { index, path ->
+        "    $ANSI_GREEN${index + 1}.$ANSI_RESET ${path.absolutePathString()}"
+    }.joinToString(System.lineSeparator(), prefix = "${ANSI_PURPLE}Files: $ANSI_RESET${System.lineSeparator()}")
+    println(fileSelector)
 }
 
 private enum class ReorderOption {
@@ -168,10 +180,12 @@ private class SimpleNativeKeyListener : NativeKeyListener, Closeable {
     }
 
     private fun handleKeyPress(event: NativeKeyEvent) {
+//        println("Press key (code = ${event.keyCode}, raw = ${event.rawCode}, name = ${NativeKeyEvent.getKeyText(event.keyCode)})")
         if (event.keyCode !in INTERESTED_KEYS) return
         val completableFuture = callback.get() ?: return
-        callback.compareAndSet(completableFuture, null)
-        completableFuture.complete(event)
+        if (callback.compareAndSet(completableFuture, null)) {
+            completableFuture.complete(event)
+        }
     }
 
     fun readKey(): CompletableFuture<NativeKeyEvent> {

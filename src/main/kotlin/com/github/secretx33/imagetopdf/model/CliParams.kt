@@ -18,7 +18,7 @@ class CliParams {
     @Option(names = ["-rf", "--render-factor"], description = ["Scales the image virtually in the final PDF by this factor (default: 0.5)"])
     var imageRenderFactor: Double = 0.5
 
-    @Option(names = ["-i", "--interactive"], description = ["List all files and allowing reorder"])
+    @Option(names = ["-i", "--interactive"], description = ["List all files and allow re-order"])
     var isInteractive: Boolean = false
 
     @Parameters(paramLabel = "FILE", arity = "1..*", converter = [PathConverter::class], description = ["One or more files to add to PDF"])
