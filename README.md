@@ -11,13 +11,13 @@ ImageToPdf is a Kotlin CLI tool that allows you to convert images into PDF files
 
 ## Download
 
-Download the latest compiled binary by clicking [here](https://github.com/SecretX33/ImageToPdf/releases/latest/download/ImageToPdf.jar).
+Download the latest compiled binary by clicking [HERE](https://github.com/SecretX33/ImageToPdf/releases/latest/download/ImageToPdf.jar).
 
-This is a Java (JVM) project, so remember to install [Java](https://adoptium.net/temurin/releases) to run it if you don't already have it.
+This is a Java (JVM) project, so remember to install [Java](https://adoptium.net/temurin/releases) 17 to run it if you don't have it already.
 
 ## Quick Start
 
-The easiest way of using ImageToPdf is to download both `.bat` scripts from the [scripts](scripts) folder, they facilitate **a lot** and make the process much more convenient. If you choose to go this route, you just have to replace `{{SET_THE_PATH_HERE}}` in both scripts by the actual folder where you saved the downloaded`ImageToPdf.jar` file.
+The easiest way of using ImageToPdf is to download both `.bat` scripts from the [scripts](scripts) folder, they facilitate **a lot** and make the process much more convenient. If you choose to go this route, you just have to replace `{{SET_THE_PATH_HERE}}` in both scripts by the actual folder where you saved the downloaded `ImageToPdf.jar` file.
 
 Then, to use it, just drag-and-drop the images that you want onto the choosen `.bat`!
 
@@ -27,6 +27,8 @@ Then, to use it, just drag-and-drop the images that you want onto the choosen `.
 - `!each.bat`: will create multiple `.pdf`, once for EACH dragged image
 
 ## Command usage
+
+For more advanced usages, or doing some script customization, where is the full list of features that ImageToPdf has to offer.
 
 ### 1. Simple PDF creation
 To convert images to a single PDF without any additional processing:
