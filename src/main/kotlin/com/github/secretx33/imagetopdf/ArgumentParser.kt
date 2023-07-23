@@ -227,7 +227,14 @@ private class SimpleNativeKeyListener : NativeKeyListener, Closeable {
         GlobalScreen.addNativeKeyListener(this)
     }
 
-    override fun close() = GlobalScreen.removeNativeKeyListener(this)
+    override fun close() {
+        try {
+            GlobalScreen.unregisterNativeHook()
+        } finally {
+            GlobalScreen.removeNativeKeyListener(this)
+            isRegistered.set(false)
+        }
+    }
 
     private companion object {
         val INTERESTED_KEYS = setOf(NativeKeyEvent.VC_UP, NativeKeyEvent.VC_DOWN, NativeKeyEvent.VC_ENTER, NativeKeyEvent.VC_SPACE, NativeKeyEvent.VC_ESCAPE, NativeKeyEvent.VC_Q)
