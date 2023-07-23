@@ -19,12 +19,12 @@ This is a Java (JVM) project, so remember to install [Java](https://adoptium.net
 
 The easiest way of using ImageToPdf is to download both `.bat` scripts from the [scripts](scripts) folder, they facilitate **a lot** and make the process much more convenient. If you choose to go this route, you just have to replace `{{SET_THE_PATH_HERE}}` in both scripts by the actual folder where you saved the downloaded `ImageToPdf.jar` file.
 
-Then, to use it, just drag-and-drop the images that you want onto the choosen `.bat`!
+Then, to start creating PDFs, just drag-and-drop the images on either script.
 
-### Scripts
+## Scripts
 
-- `!combine.bat`: will create a single `.pdf` with all dragged images COMBINED
-- `!each.bat`: will create multiple `.pdf`, once for EACH dragged image
+- [`!combine.bat`](scripts/!combine.bat): will create a single `.pdf` with all dragged images **COMBINED**.
+- [`!each.bat`](scripts/!each.bat): will create multiple `.pdf`, once for **EACH** dragged image.
 
 ## Command usage
 
