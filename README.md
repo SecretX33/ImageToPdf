@@ -26,6 +26,8 @@ Then, to start creating PDFs, just drag-and-drop the images on either script.
 - [`!combine.bat`](scripts/!combine.bat): will create a single `.pdf` with all dragged images **COMBINED**.
 - [`!each.bat`](scripts/!each.bat): will create multiple `.pdf`, once for **EACH** dragged image.
 
+**Hint:** to easily download the scripts, right-click on the links above and select `Save Link As...`.
+
 ## Command usage
 
 For more advanced usages, or doing some script customization, where is the full list of features that ImageToPdf has to offer.
