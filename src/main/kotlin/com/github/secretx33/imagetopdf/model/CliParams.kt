@@ -37,8 +37,13 @@ class CliParams {
     var versionInfoRequested = false
 }
 
-enum class SortFilesBy {
-    NAME
+enum class SortFilesBy(val displayName: String) {
+    NAME("Name"),
+    NAME_DESC("Name (desc)"),
+    CREATED_DATE("Created date"),
+    CREATED_DATE_DESC("Created date (desc)"),
+    MODIFIED_DATE("Modified date"),
+    MODIFIED_DATE_DESC("Modified date (desc)"),
 }
 
 class PathConverter : CommandLine.ITypeConverter<Path> {

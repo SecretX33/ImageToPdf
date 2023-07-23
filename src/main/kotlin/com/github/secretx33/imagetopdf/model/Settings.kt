@@ -25,9 +25,7 @@ fun CliParams.toSettings(): Settings {
     )
 }
 
-enum class CombineMode {
-    SINGLE_FILE,
-    MULTIPLE_FILES;
-
-    val displayName = name.replace("_", " ")
+enum class CombineMode(val displayName: String) {
+    SINGLE_FILE("Single file"),
+    MULTIPLE_FILES("Multiple files");
 }

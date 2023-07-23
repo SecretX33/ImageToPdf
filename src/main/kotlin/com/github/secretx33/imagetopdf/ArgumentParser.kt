@@ -19,6 +19,7 @@ import org.jnativehook.keyboard.NativeKeyListener
 import picocli.CommandLine
 import java.io.Closeable
 import java.nio.file.Path
+import java.nio.file.attribute.BasicFileAttributes
 import java.util.Collections
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicBoolean
@@ -27,6 +28,7 @@ import kotlin.io.path.absolutePathString
 import kotlin.io.path.extension
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.notExists
+import kotlin.io.path.readAttributes
 
 fun fetchSettings(args: Array<String>): Settings {
     val cliParams = getCliParams(args).validate()
@@ -88,11 +90,25 @@ private fun printGreetings() = println("$ANSI_RESET${getTextResource("banner.txt
 
 private fun Settings.sortFiles(): Settings = when {
     files.size >= 2 && isInteractive -> copy(files = interactivelyReorderFiles(files))
-    files.size >= 2 && sortFilesBy == SortFilesBy.NAME -> copy(files = files.sortedWith { o1, o2 ->
-        String.CASE_INSENSITIVE_ORDER.compare(o1.absolutePathString(), o2.absolutePathString())
-    }.toSet())
+    files.size >= 2 && sortFilesBy != null -> copy(files = files.sortBy(sortFilesBy).toSet())
     else -> this
 }
+
+private fun Iterable<Path>.sortBy(sortFilesBy: SortFilesBy): List<Path> = when (sortFilesBy) {
+    SortFilesBy.NAME -> sortedWith { o1, o2 ->
+        String.CASE_INSENSITIVE_ORDER.compare(o1.absolutePathString(), o2.absolutePathString())
+    }
+    SortFilesBy.NAME_DESC -> sortedWith { o1, o2 ->
+        String.CASE_INSENSITIVE_ORDER.compare(o2.absolutePathString(), o1.absolutePathString())
+    }
+    SortFilesBy.CREATED_DATE -> sortedBy { it.attributes.creationTime().toInstant() }
+    SortFilesBy.CREATED_DATE_DESC -> sortedByDescending { it.attributes.creationTime().toInstant() }
+    SortFilesBy.MODIFIED_DATE -> sortedBy { it.attributes.lastModifiedTime().toInstant() }
+    SortFilesBy.MODIFIED_DATE_DESC -> sortedByDescending { it.attributes.lastModifiedTime().toInstant() }
+}
+
+private val Path.attributes: BasicFileAttributes
+    get() = readAttributes<BasicFileAttributes>()
 
 private fun interactivelyReorderFiles(files: Set<Path>): Set<Path> {
     val mutableFiles = files.toMutableList()
@@ -163,8 +179,11 @@ private fun getReorderOption(keyListener: SimpleNativeKeyListener): ReorderOptio
 
 private fun Settings.printSelectedOptions(): Settings = apply {
     println("${ANSI_PURPLE}Mode:$ANSI_GREEN ${combineMode.displayName}$ANSI_RESET")
+    sortFilesBy?.let {
+        println("${ANSI_PURPLE}Sort: $ANSI_GREEN${it.displayName}$ANSI_RESET")
+    }
     jpgCompressionQuality?.let {
-        println("${ANSI_PURPLE}JPG compression enabled. Quality: $ANSI_GREEN$jpgCompressionQuality$ANSI_RESET")
+        println("${ANSI_PURPLE}JPG compression enabled. Quality: $ANSI_GREEN$it$ANSI_RESET")
     }
     printCurrentFiles(files)
 }
