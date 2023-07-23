@@ -8,6 +8,7 @@ data class Settings(
     val imageScaleFactor: Double,
     val imageRenderFactor: Double,
     val jpgCompressionQuality: Double?,
+    val sortFilesBy: SortFilesBy?,
     val isInteractive: Boolean,
 )
 
@@ -18,8 +19,9 @@ fun CliParams.toSettings(): Settings {
         combineMode = if (fileSet.size >= 2 && !willCombine) CombineMode.MULTIPLE_FILES else CombineMode.SINGLE_FILE,
         imageScaleFactor = imageResizeFactor,
         imageRenderFactor = imageRenderFactor,
-        isInteractive = isInteractive,
         jpgCompressionQuality = jpgCompressionQuality,
+        sortFilesBy = sortFilesBy,
+        isInteractive = isInteractive,
     )
 }
 

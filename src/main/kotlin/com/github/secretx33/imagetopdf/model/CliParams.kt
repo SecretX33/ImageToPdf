@@ -24,6 +24,9 @@ class CliParams {
     @Option(names = ["-jq", "--jpg-quality"], arity = "0..1", fallbackValue = "0.7", description = ["Converts the images into JPEG with the provided quality (0.0 ~ 1.0) (disabled by default) (if specified without parameter: \${FALLBACK-VALUE})"])
     var jpgCompressionQuality: Double? = null
 
+    @Option(names = ["-s", "--sort"], arity = "0..1", fallbackValue = "NAME", description = ["Sort the given FILE by the specified mode (disabled by default) (if specified without parameter: \${FALLBACK-VALUE})"])
+    var sortFilesBy: SortFilesBy? = null
+
     @Parameters(paramLabel = "FILE", arity = "1..*", converter = [PathConverter::class], description = ["One or more files to add to PDF"])
     lateinit var files: Array<Path>
 
@@ -32,6 +35,10 @@ class CliParams {
 
     @Option(names = ["-v", "--version"], versionHelp = true, description = ["Display version info"])
     var versionInfoRequested = false
+}
+
+enum class SortFilesBy {
+    NAME
 }
 
 class PathConverter : CommandLine.ITypeConverter<Path> {

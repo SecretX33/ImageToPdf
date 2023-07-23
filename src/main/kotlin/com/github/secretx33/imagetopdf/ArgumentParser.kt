@@ -2,6 +2,7 @@ package com.github.secretx33.imagetopdf
 
 import com.github.secretx33.imagetopdf.model.CliParams
 import com.github.secretx33.imagetopdf.model.Settings
+import com.github.secretx33.imagetopdf.model.SortFilesBy
 import com.github.secretx33.imagetopdf.model.toSettings
 import com.github.secretx33.imagetopdf.util.ANSI_GREEN
 import com.github.secretx33.imagetopdf.util.ANSI_PURPLE
@@ -31,7 +32,7 @@ fun fetchSettings(args: Array<String>): Settings {
     val cliParams = getCliParams(args).validate()
     printGreetings()
     return cliParams.toSettings()
-        .applyInteractive()
+        .sortFiles()
         .printSelectedOptions()
         .also { println() }
 }
@@ -85,11 +86,16 @@ private fun Path.isSupportedFormat(): Boolean = supportedExtensions.any { extens
 
 private fun printGreetings() = println("$ANSI_RESET${getTextResource("banner.txt")}${System.lineSeparator()}")
 
-private fun Settings.applyInteractive(): Settings =
-    if (files.size >= 2 && isInteractive) copy(files = reorderFiles(files)) else this
+private fun Settings.sortFiles(): Settings = when {
+    files.size >= 2 && isInteractive -> copy(files = interactivelyReorderFiles(files))
+    files.size >= 2 && sortFilesBy == SortFilesBy.NAME -> copy(files = files.sortedWith { o1, o2 ->
+        String.CASE_INSENSITIVE_ORDER.compare(o1.absolutePathString(), o2.absolutePathString())
+    }.toSet())
+    else -> this
+}
 
-private fun reorderFiles(files: Set<Path>): Set<Path> {
-    val files = files.toMutableList()
+private fun interactivelyReorderFiles(files: Set<Path>): Set<Path> {
+    val mutableFiles = files.toMutableList()
 
     println("${ANSI_PURPLE}Hint: Use your keyboard ${ANSI_GREEN}UP$ANSI_PURPLE and ${ANSI_GREEN}DOWN$ANSI_PURPLE arrows to navigate the files, ${ANSI_GREEN}Space$ANSI_PURPLE to swap their places$ANSI_PURPLE, and ${ANSI_GREEN}Q$ANSI_PURPLE, ${ANSI_GREEN}Enter$ANSI_PURPLE, or ${ANSI_GREEN}ESC$ANSI_PURPLE to confirm$ANSI_RESET")
 
@@ -99,15 +105,15 @@ private fun reorderFiles(files: Set<Path>): Set<Path> {
     val keyListener = SimpleNativeKeyListener()
 
     while (isReordering) {
-        printCurrentFilesForReorder(files, cursorIndex, itemSelectedIndex)
+        printCurrentFilesForReorder(mutableFiles, cursorIndex, itemSelectedIndex)
         when (getReorderOption(keyListener)) {
             ReorderOption.UP -> cursorIndex = (cursorIndex - 1).coerceAtLeast(0)
-            ReorderOption.DOWN -> cursorIndex = (cursorIndex + 1).coerceAtMost(files.lastIndex)
+            ReorderOption.DOWN -> cursorIndex = (cursorIndex + 1).coerceAtMost(mutableFiles.lastIndex)
             ReorderOption.SELECT -> itemSelectedIndex = when (itemSelectedIndex) {
                 null -> cursorIndex  // Select current item
                 cursorIndex -> null  // Unselect current item
                 else -> {            // Swap items
-                    Collections.swap(files, cursorIndex, itemSelectedIndex)
+                    Collections.swap(mutableFiles, cursorIndex, itemSelectedIndex)
                     null
                 }
             }
@@ -116,7 +122,7 @@ private fun reorderFiles(files: Set<Path>): Set<Path> {
     }
 
     keyListener.close()
-    return files.toSet()
+    return mutableFiles.toSet()
 }
 
 private fun printCurrentFilesForReorder(
