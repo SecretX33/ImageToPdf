@@ -50,6 +50,11 @@ class ScalableDimension(
     @Suppress("unused")
     constructor(w: Double, h: Double, scale: Double = 1.0) : this(w = w.toInt(), h = h.toInt(), scale = scale)
 
+    fun toScaledDimensionTuple(): DimensionTuple {
+        val dimensions = ScalableDimension(width, height, scale)
+        return DimensionTuple(dimensions, dimensions.scale())
+    }
+
     /**
      * Scales the given source [Dimension] to the destination [Dimension], maintaining the aspect ratio with
      * respect to the best fit.

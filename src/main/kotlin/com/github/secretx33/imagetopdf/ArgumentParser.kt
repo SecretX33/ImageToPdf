@@ -28,8 +28,7 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.notExists
 
 fun fetchSettings(args: Array<String>): Settings {
-    val cliParams = getCliParams(args)
-    validatePaths(cliParams.files)
+    val cliParams = getCliParams(args).validate()
     printGreetings()
     return cliParams.toSettings()
         .applyInteractive()
@@ -54,6 +53,13 @@ private fun getCliParams(args: Array<String>): CliParams {
         exitSilently()
     }
     return cliParams
+}
+
+private fun CliParams.validate(): CliParams = apply {
+    validatePaths(files)
+    if (jpgCompressionQuality != null && jpgCompressionQuality!! !in 0.0..1.0) {
+        exitWithMessage("Invalid argument: compression value '$jpgCompressionQuality' is out of bounds (0.0 ~ 1.0)")
+    }
 }
 
 private fun validatePaths(paths: Array<Path>) {
@@ -150,6 +156,10 @@ private fun getReorderOption(keyListener: SimpleNativeKeyListener): ReorderOptio
 }
 
 private fun Settings.printSelectedOptions(): Settings = apply {
+    println("${ANSI_PURPLE}Mode:$ANSI_GREEN ${combineMode.displayName}$ANSI_RESET")
+    jpgCompressionQuality?.let {
+        println("${ANSI_PURPLE}JPG compression enabled. Quality: $ANSI_GREEN$jpgCompressionQuality$ANSI_RESET")
+    }
     printCurrentFiles(files)
 }
 

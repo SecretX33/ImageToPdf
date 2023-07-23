@@ -2,6 +2,7 @@ package com.github.secretx33.imagetopdf.util
 
 import com.github.secretx33.imagetopdf.exception.QuitApplicationException
 import org.jnativehook.GlobalScreen
+import java.io.ByteArrayOutputStream
 import java.lang.invoke.MethodHandles
 import java.nio.file.Path
 import java.text.DecimalFormat
@@ -64,4 +65,11 @@ fun disableAnnoyingJnativehookLogger() {
 
     // Don't forget to disable the parent handlers.
     logger.useParentHandlers = false
+}
+
+fun <T> lazyNone(block: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE, block)
+
+fun byteArrayOutputStream(block: (ByteArrayOutputStream) -> Unit): ByteArray = ByteArrayOutputStream().use {
+    block(it)
+    it.toByteArray()
 }

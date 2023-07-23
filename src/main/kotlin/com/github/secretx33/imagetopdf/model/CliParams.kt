@@ -12,14 +12,17 @@ class CliParams {
     @Option(names = ["-c", "--combine"], description = ["Combine all files into a single PDF (default: false)"])
     var willCombine: Boolean = false
 
-    @Option(names = ["-sf", "--scale-factor"], description = ["Scales the image resolution by this factor (default: 1.0)"])
-    var imageScaleFactor: Double = 1.0
+    @Option(names = ["--resize"], description = ["Resize the image resolution by this factor (default: 1.0)"])
+    var imageResizeFactor: Double = 1.0
 
     @Option(names = ["-rf", "--render-factor"], description = ["Scales the image virtually in the final PDF by this factor (default: 0.5)"])
     var imageRenderFactor: Double = 0.5
 
     @Option(names = ["-i", "--interactive"], description = ["List all files and allow re-order"])
     var isInteractive: Boolean = false
+
+    @Option(names = ["-jq", "--jpg-quality"], arity = "0..1", fallbackValue = "0.7", description = ["Converts the images into JPEG with the provided quality (0.0 ~ 1.0) (disabled by default) (if specified without parameter: \${FALLBACK-VALUE})"])
+    var jpgCompressionQuality: Double? = null
 
     @Parameters(paramLabel = "FILE", arity = "1..*", converter = [PathConverter::class], description = ["One or more files to add to PDF"])
     lateinit var files: Array<Path>
@@ -29,17 +32,6 @@ class CliParams {
 
     @Option(names = ["-v", "--version"], versionHelp = true, description = ["Display version info"])
     var versionInfoRequested = false
-}
-
-fun CliParams.toSettings(): Settings {
-    val fileSet = files.toSet()
-    return Settings(
-        files = fileSet,
-        combineMode = if (fileSet.size >= 2 && !willCombine) CombineMode.MULTIPLE_FILES else CombineMode.SINGLE_FILE,
-        imageScaleFactor = imageScaleFactor,
-        imageRenderFactor = imageRenderFactor,
-        isInteractive = isInteractive,
-    )
 }
 
 class PathConverter : CommandLine.ITypeConverter<Path> {
