@@ -67,7 +67,7 @@ application {
 
 runtime {
     options.set(listOf("--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"))
-    modules.set(listOf("java.base"))
+    modules.set(listOf("java.base", "java.desktop", "java.logging"))
     launcher {
         jvmArgs = listOf("-Xms1m", "-Xmx1024m", "-XX:+UseG1GC", "-XX:+DisableExplicitGC", "-Dfile.encoding=UTF-8")
     }
