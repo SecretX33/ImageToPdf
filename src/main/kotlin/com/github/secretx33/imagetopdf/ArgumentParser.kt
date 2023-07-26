@@ -60,26 +60,33 @@ private fun getCliParams(args: Array<String>): CliParams {
 
 private fun CliParams.validate(): CliParams = apply {
     validatePaths(files)
-    if (jpgCompressionQuality != null && jpgCompressionQuality!! !in 0.0..1.0) {
-        exitWithMessage("Invalid argument: compression value '$jpgCompressionQuality' is out of bounds (0.0 ~ 1.0)")
+    validateInRange(imageResizeFactor, "image resize factor", 0.0..1000000.0)
+    validateInRange(imageRenderFactor, "image render factor", 0.0..1000000.0)
+    validateInRange(jpgCompressionQuality, "compression value", 0.0..1.0)
+}
+
+private fun <T> validateInRange(
+    number: T?,
+    parameterName: String,
+    range: ClosedRange<T>,
+) where T : Number, T : Comparable<T> {
+    if (number != null && number !in range) {
+        exitWithMessage("Invalid argument: $parameterName '$number' is out of bounds (${range.start.toLong()} ~ ${range.endInclusive.toLong()})")
     }
 }
 
 private fun validatePaths(paths: Array<Path>) {
-    var errorMessage: String? = null
-
     if (paths.isEmpty()) {
-        errorMessage = "Invalid argument: this program requires at least one file passed as argument to function."
+        exitWithMessage("Invalid argument: this program requires at least one file passed as argument.")
     }
-    paths.onEach {
-        errorMessage = errorMessage ?: when {
+    paths.firstNotNullOfOrNull {
+        when {
             it.notExists() -> "Invalid argument: file '$it' does not seems to exist."
-            !it.isSupportedFormat() -> "Invalid argument: file '$it' is of an illegal type '${it.extension}', this program only support these extensions: ${supportedExtensions.joinToString(", ") { ".$it" }}."
-            !it.isRegularFile() -> "Invalid argument: '$it' is not a file (maybe it is a folder?)"
+            !it.isRegularFile() -> "Invalid argument: '$it' is not a file (maybe it is a folder?)."
+            !it.isSupportedFormat() -> "Invalid argument: file '$it' is of an illegal type '${it.extension}', this program only support these extensions: ${supportedExtensions.sorted().joinToString(", ") { ".$it" }}."
             else -> null
         }
-    }
-    errorMessage?.let(::exitWithMessage)
+    }?.let(::exitWithMessage)
 }
 
 private val supportedExtensions = setOf("jpg", "jpeg", "png")

@@ -10,7 +10,7 @@ import kotlin.io.path.Path
 @Command(name = "imagetopdf", version = ["ImageToPdf version 0.1"])
 class CliParams {
     @Option(names = ["-c", "--combine"], description = ["Combine all files into a single PDF (default: false)"])
-    var willCombine: Boolean = false
+    var isCombine: Boolean = false
 
     @Option(names = ["--resize"], description = ["Resize the image resolution by this factor (default: 1.0)"])
     var imageResizeFactor: Double = 1.0
@@ -21,14 +21,14 @@ class CliParams {
     @Option(names = ["-i", "--interactive"], description = ["List all files and allow re-order"])
     var isInteractive: Boolean = false
 
-    @Option(names = ["-jq", "--jpg-quality"], arity = "0..1", fallbackValue = "0.7", description = ["Converts the images into JPEG with the provided quality (0.0 ~ 1.0) (disabled by default) (if specified without parameter: \${FALLBACK-VALUE})"])
+    @Option(names = ["-jq", "--jpg-quality"], arity = "0..1", fallbackValue = "0.75", description = ["Converts the images into JPEG with the provided quality (0.0 ~ 1.0) (disabled by default) (if specified without parameter: \${FALLBACK-VALUE})"])
     var jpgCompressionQuality: Double? = null
 
     @Option(names = ["-s", "--sort"], arity = "0..1", fallbackValue = "NAME", description = ["Sort the given FILE by the specified mode (disabled by default) (if specified without parameter: \${FALLBACK-VALUE})"])
     var sortFilesBy: SortFilesBy? = null
 
-    @Parameters(paramLabel = "FILE", arity = "1..*", converter = [PathConverter::class], description = ["One or more files to add to PDF"])
-    lateinit var files: Array<Path>
+    @Parameters(paramLabel = "FILE", converter = [PathConverter::class], description = ["One or more files to add to PDF"])
+    var files: Array<Path> = emptyArray()
 
     @Option(names = ["-h", "--help"], usageHelp = true, description = ["Display this help message"])
     var usageHelpRequested = false

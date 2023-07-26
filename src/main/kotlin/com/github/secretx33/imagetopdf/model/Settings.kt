@@ -16,7 +16,7 @@ fun CliParams.toSettings(): Settings {
     val fileSet = files.toSet()
     return Settings(
         files = fileSet,
-        combineMode = if (fileSet.size >= 2 && !willCombine) CombineMode.MULTIPLE_FILES else CombineMode.SINGLE_FILE,
+        combineMode = if (fileSet.size >= 2 && !isCombine) CombineMode.MULTIPLE_FILES else CombineMode.SINGLE_FILE,
         imageScaleFactor = imageResizeFactor,
         imageRenderFactor = imageRenderFactor,
         jpgCompressionQuality = jpgCompressionQuality,
