@@ -4,6 +4,7 @@ import com.github.secretx33.imagetopdf.model.LazyImage
 import com.github.secretx33.imagetopdf.model.Settings
 import com.github.secretx33.imagetopdf.util.ANSI_RESET
 import com.github.secretx33.imagetopdf.util.ANSI_YELLOW
+import com.github.secretx33.imagetopdf.util.absoluteParent
 import com.github.secretx33.imagetopdf.util.byteArrayOutputStream
 import com.github.secretx33.imagetopdf.util.exitWithMessage
 import com.github.secretx33.imagetopdf.util.formattedFileSize
@@ -38,7 +39,7 @@ fun createPdf(file: Path, block: PDDocument.() -> Unit) = try {
     PDDocument().use { document ->
         document.block()
         if (file.isRegularFile()) {
-            println("${ANSI_YELLOW}Warn: file '${file.name}' at '${file.parent}' already exists, overriding it (${file.formattedFileSize()})$ANSI_RESET")
+            println("${ANSI_YELLOW}Warn: file '${file.name}' at '${file.absoluteParent}' already exists, overriding it (${file.formattedFileSize()})$ANSI_RESET")
         }
         file.outputStream(StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING).buffered().use {
             document.save(it, CompressParameters.DEFAULT_COMPRESSION)

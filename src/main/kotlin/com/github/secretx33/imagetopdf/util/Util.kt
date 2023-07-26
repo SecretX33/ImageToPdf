@@ -10,6 +10,8 @@ import java.text.DecimalFormatSymbols
 import java.util.Locale
 import java.util.logging.Level
 import java.util.logging.Logger
+import kotlin.io.path.Path
+import kotlin.io.path.absolute
 import kotlin.io.path.fileSize
 import kotlin.time.Duration
 
@@ -20,6 +22,8 @@ fun printError(message: String) = System.err.println(message)
 fun exitSilently(): Nothing = throw QuitApplicationException()
 
 fun exitWithMessage(message: String): Nothing = throw QuitApplicationException(message)
+
+val Path.absoluteParent: Path get() = (parent ?: Path("")).absolute()
 
 fun Path.formattedFileSize(): String = fileSize().bytesToHumanReadableSize()
 

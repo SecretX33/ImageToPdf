@@ -9,12 +9,11 @@ import com.github.secretx33.imagetopdf.util.ANSI_CYAN
 import com.github.secretx33.imagetopdf.util.ANSI_GREEN
 import com.github.secretx33.imagetopdf.util.ANSI_PURPLE
 import com.github.secretx33.imagetopdf.util.ANSI_RESET
+import com.github.secretx33.imagetopdf.util.absoluteParent
 import com.github.secretx33.imagetopdf.util.formattedFileSize
 import com.github.secretx33.imagetopdf.util.formattedSeconds
 import com.github.secretx33.imagetopdf.util.printError
 import java.nio.file.Path
-import kotlin.io.path.Path
-import kotlin.io.path.absolutePathString
 import kotlin.io.path.div
 import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
@@ -69,10 +68,10 @@ private fun createMultipleFiles(settings: Settings) {
     }
 }
 
-private fun createPdfPath(picture: Path): Path = (picture.parent ?: Path("")) / "${picture.nameWithoutExtension}.pdf"
+private fun createPdfPath(picture: Path): Path = picture.absoluteParent / "${picture.nameWithoutExtension}.pdf"
 
 private fun notifyPdfCreated(file: Path) =
-    println("${ANSI_PURPLE}Created PDF $ANSI_GREEN'${file.name}'$ANSI_PURPLE at $ANSI_GREEN'${file.parent.absolutePathString()}' $ANSI_CYAN(${file.formattedFileSize()})$ANSI_RESET")
+    println("${ANSI_PURPLE}Created PDF $ANSI_GREEN'${file.name}'$ANSI_PURPLE at $ANSI_GREEN'${file.absoluteParent}' $ANSI_CYAN(${file.formattedFileSize()})$ANSI_RESET")
 
 private fun printSuccessMessage(settings: Settings, duration: Duration) {
     val message = when {
