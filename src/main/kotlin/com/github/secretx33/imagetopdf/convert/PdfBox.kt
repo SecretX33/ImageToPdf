@@ -54,7 +54,7 @@ fun PDDocument.addImage(
     settings: Settings,
 ) {
     val lazyImage = lazyImage(picture)
-        .scale(settings.imageScaleFactor)
+        .resize(settings.imageResizeFactor)
         .compressToJpg(settings.jpgCompressionQuality)
 
     val scaled = ScalableDimension(lazyImage.width, lazyImage.height, settings.imageRenderFactor).scale()
@@ -78,20 +78,28 @@ private fun PDDocument.lazyImage(picture: Path): LazyImage {
     )
 }
 
-private fun LazyImage.scale(factor: Double): LazyImage {
-    if (factor == 1.0) return this
+private fun LazyImage.resize(factor: Double): LazyImage {
+    if (factor == 1.0) {
+        return this
+    }
     require(factor > 0) { "Invalid factor value (expected > 0, actual: $factor)" }
 
     val dimensions = ScalableDimension(width, height, factor).toScaledDimensionTuple()
+        .let {
+            it.copy(modified = ScalableDimension(
+                it.modified.getWidth().coerceAtLeast(1.0),
+                it.modified.getHeight().coerceAtLeast(1.0),
+            ))
+        }
 
     return copy(
-        lazyImage = lazyNone { image.scale(dimensions, document, fileName) },
+        lazyImage = lazyNone { image.resize(dimensions, document, fileName) },
         width = dimensions.modified.getWidth().toInt(),
         height = dimensions.modified.getHeight().toInt(),
     )
 }
 
-private fun PDImageXObject.scale(
+private fun PDImageXObject.resize(
     dimensionTuple: DimensionTuple,
     document: PDDocument,
     fileName: Path,
@@ -117,7 +125,9 @@ private fun PDImageXObject.scale(
 }
 
 private fun LazyImage.compressToJpg(jpgCompressionQuality: Double?): LazyImage {
-    if (jpgCompressionQuality == null) return this
+    if (jpgCompressionQuality == null) {
+        return this
+    }
     require(jpgCompressionQuality in 0.0..1.0) { "JPG compression factor must be between 0 and 1 (actual: $jpgCompressionQuality)" }
 
     val newFileName = Path("${fileName.nameWithoutExtension}.jpg")
@@ -138,9 +148,8 @@ private fun PDImageXObject.convertToJpg(document: PDDocument, fileName: Path): P
     val outputImage = BufferedImage(width, height, false).graphics {
         drawImage(image, 0, 0, Color.WHITE, null)
     }
-    val imageBytes = byteArrayOutputStream {
-        ImageIO.write(outputImage, "jpg", it)
-    }
+    val imageBytes = outputImage.toByteArray("jpg")
+
     return PDImageXObject.createFromByteArray(document, imageBytes, "${fileName.nameWithoutExtension}.jpg")
 }
 

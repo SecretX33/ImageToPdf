@@ -60,18 +60,24 @@ private fun getCliParams(args: Array<String>): CliParams {
 
 private fun CliParams.validate(): CliParams = apply {
     validatePaths(files)
-    validateInRange(imageResizeFactor, "image resize factor", 0.0..1000000.0)
-    validateInRange(imageRenderFactor, "image render factor", 0.0..1000000.0)
-    validateInRange(jpgCompressionQuality, "compression value", 0.0..1.0)
+    validateInRange(imageResizeFactor, 0.00000000001..1000000.0) {
+        "Invalid argument: image resize factor '$imageResizeFactor' is out of bounds (> 0 and < ${it.endInclusive.toLong()})"
+    }
+    validateInRange(imageRenderFactor, 0.0..1000000.0) {
+        "Invalid argument: image render factor '$imageRenderFactor' is out of bounds (${it.start} ~ ${it.endInclusive})"
+    }
+    validateInRange(jpgCompressionQuality, 0.0..1.0) {
+        "Invalid argument: compression value '$jpgCompressionQuality' is out of bounds (${it.start} ~ ${it.endInclusive})"
+    }
 }
 
 private fun <T> validateInRange(
     number: T?,
-    parameterName: String,
     range: ClosedRange<T>,
+    message: (ClosedRange<T>) -> String,
 ) where T : Number, T : Comparable<T> {
     if (number != null && number !in range) {
-        exitWithMessage("Invalid argument: $parameterName '$number' is out of bounds (${range.start.toLong()} ~ ${range.endInclusive.toLong()})")
+        exitWithMessage(message(range))
     }
 }
 

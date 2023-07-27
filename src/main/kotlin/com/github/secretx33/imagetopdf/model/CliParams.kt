@@ -15,7 +15,7 @@ class CliParams {
     @Option(names = ["--resize"], description = ["Resize the image resolution by this factor (default: 1.0)"])
     var imageResizeFactor: Double = 1.0
 
-    @Option(names = ["-rf", "--render-factor"], description = ["Scales the image virtually in the final PDF by this factor (default: 0.5)"])
+    @Option(names = ["--scale"], description = ["Scales the image virtually in the final PDF by this factor (default: 0.5)"])
     var imageRenderFactor: Double = 0.5
 
     @Option(names = ["-i", "--interactive"], description = ["List all files and allow re-order"])
