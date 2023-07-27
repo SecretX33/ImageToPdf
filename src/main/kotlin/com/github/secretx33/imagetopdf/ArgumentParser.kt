@@ -8,10 +8,10 @@ import com.github.secretx33.imagetopdf.util.ANSI_GREEN
 import com.github.secretx33.imagetopdf.util.ANSI_PURPLE
 import com.github.secretx33.imagetopdf.util.ANSI_RED
 import com.github.secretx33.imagetopdf.util.ANSI_RESET
+import com.github.secretx33.imagetopdf.util.bail
 import com.github.secretx33.imagetopdf.util.disableAnnoyingJnativehookLogger
-import com.github.secretx33.imagetopdf.util.exitSilently
-import com.github.secretx33.imagetopdf.util.exitWithMessage
 import com.github.secretx33.imagetopdf.util.getTextResource
+import com.github.secretx33.imagetopdf.util.quitProgram
 import org.jnativehook.GlobalScreen
 import org.jnativehook.NativeHookException
 import org.jnativehook.keyboard.NativeKeyEvent
@@ -49,11 +49,11 @@ private fun getCliParams(args: Array<String>): CliParams {
     if (cliParams.usageHelpRequested) {
         println("${getTextResource("banner_help.txt")}${System.lineSeparator()}")
         commandLine.usage(System.out)
-        exitSilently()
+        quitProgram()
     }
     if (cliParams.versionInfoRequested) {
         commandLine.printVersionHelp(System.out)
-        exitSilently()
+        quitProgram()
     }
     return cliParams
 }
@@ -77,13 +77,13 @@ private fun <T> validateInRange(
     message: (ClosedRange<T>) -> String,
 ) where T : Number, T : Comparable<T> {
     if (number != null && number !in range) {
-        exitWithMessage(message(range))
+        bail(message(range))
     }
 }
 
 private fun validatePaths(paths: Array<Path>) {
     if (paths.isEmpty()) {
-        exitWithMessage("Invalid argument: this program requires at least one file passed as argument.")
+        bail("Invalid argument: this program requires at least one file passed as argument.")
     }
     paths.firstNotNullOfOrNull {
         when {
@@ -92,7 +92,7 @@ private fun validatePaths(paths: Array<Path>) {
             !it.isSupportedFormat() -> "Invalid argument: file '$it' is of an illegal type '${it.extension}', this program only support these extensions: ${supportedExtensions.sorted().joinToString(", ") { ".$it" }}."
             else -> null
         }
-    }?.let(::exitWithMessage)
+    }?.let(::bail)
 }
 
 private val supportedExtensions = setOf("jpg", "jpeg", "png")
@@ -186,7 +186,7 @@ private fun getReorderOption(keyListener: SimpleNativeKeyListener): ReorderOptio
         NativeKeyEvent.VC_DOWN -> ReorderOption.DOWN
         NativeKeyEvent.VC_SPACE -> ReorderOption.SELECT
         NativeKeyEvent.VC_ENTER, NativeKeyEvent.VC_ESCAPE, NativeKeyEvent.VC_Q -> ReorderOption.QUIT
-        else -> exitWithMessage("Error: Key number '$event' is not mapped.")
+        else -> bail("Error: Key number '$event' is not mapped.")
     }
 }
 
@@ -254,7 +254,7 @@ private class SimpleNativeKeyListener : NativeKeyListener, Closeable {
         try {
             GlobalScreen.registerNativeHook()
         } catch (e: NativeHookException) {
-            exitWithMessage("${e.message}\n${e.stackTraceToString()}")
+            bail("${e.message}\n${e.stackTraceToString()}")
         }
         GlobalScreen.addNativeKeyListener(this)
     }

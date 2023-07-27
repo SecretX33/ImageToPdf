@@ -1,3 +1,6 @@
 package com.github.secretx33.imagetopdf.exception
 
-class QuitApplicationException(message: String? = null) : Throwable(message = message)
+class QuitApplicationException(
+    errorMessage: String? = null,
+    val exitCode: Int = 0,
+) : Throwable(message = errorMessage)

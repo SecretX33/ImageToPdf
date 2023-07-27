@@ -18,6 +18,7 @@ import java.nio.file.Path
 import kotlin.io.path.div
 import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
+import kotlin.system.exitProcess
 import kotlin.time.Duration
 import kotlin.time.measureTime
 
@@ -29,6 +30,7 @@ fun main(args: Array<String>) {
             is QuitApplicationException -> t.message?.let(::printError)
             else -> printError("Error: ${t::class.simpleName}: ${t.message}\n${t.stackTraceToString()}")
         }
+        exitProcess((t as? QuitApplicationException)?.exitCode ?: 1)
     }
 }
 

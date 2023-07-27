@@ -19,9 +19,9 @@ private val thisClass = MethodHandles.lookup().lookupClass()
 
 fun printError(message: String) = System.err.println(message)
 
-fun exitSilently(): Nothing = throw QuitApplicationException()
+fun bail(message: String): Nothing = throw QuitApplicationException(message)
 
-fun exitWithMessage(message: String): Nothing = throw QuitApplicationException(message)
+fun quitProgram(): Nothing = throw QuitApplicationException(exitCode = 0)
 
 val Path.absoluteParent: Path get() = (parent ?: Path("")).absolute()
 

@@ -5,8 +5,8 @@ import com.github.secretx33.imagetopdf.model.Settings
 import com.github.secretx33.imagetopdf.util.ANSI_RESET
 import com.github.secretx33.imagetopdf.util.ANSI_YELLOW
 import com.github.secretx33.imagetopdf.util.absoluteParent
+import com.github.secretx33.imagetopdf.util.bail
 import com.github.secretx33.imagetopdf.util.byteArrayOutputStream
-import com.github.secretx33.imagetopdf.util.exitWithMessage
 import com.github.secretx33.imagetopdf.util.formattedFileSize
 import com.github.secretx33.imagetopdf.util.lazyNone
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters
@@ -46,7 +46,7 @@ fun createPdf(file: Path, block: PDDocument.() -> Unit) = try {
         }
     }
 } catch (e: Exception) {
-    exitWithMessage("Error creating file ${file.absolutePathString()}.\n${e.stackTraceToString()}")
+    bail("Error creating file ${file.absolutePathString()}.\n${e.stackTraceToString()}")
 }
 
 fun PDDocument.addImage(
