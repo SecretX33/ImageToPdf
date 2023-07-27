@@ -13,6 +13,7 @@ import com.github.secretx33.imagetopdf.util.absoluteParent
 import com.github.secretx33.imagetopdf.util.formattedFileSize
 import com.github.secretx33.imagetopdf.util.formattedSeconds
 import com.github.secretx33.imagetopdf.util.printError
+import org.fusesource.jansi.AnsiConsole
 import java.nio.file.Path
 import kotlin.io.path.div
 import kotlin.io.path.name
@@ -32,6 +33,7 @@ fun main(args: Array<String>) {
 }
 
 private fun bootstrapApplication(args: Array<String>) {
+    AnsiConsole.systemInstall()
     val settings = fetchSettings(args)
     val duration = measureTime {
         createPdfs(settings)
@@ -79,5 +81,5 @@ private fun printSuccessMessage(settings: Settings, duration: Duration) {
         settings.files.size >= 2 && settings.combineMode == CombineMode.MULTIPLE_FILES -> "Successfully created a PDF for each of the $ANSI_GREEN${settings.files.size}$ANSI_PURPLE images"
         else -> "Successfully created the PDF"
     }
-    println("$ANSI_PURPLE$message in $ANSI_CYAN${duration.formattedSeconds()}s$ANSI_RESET")
+    println("$ANSI_PURPLE$message in $ANSI_CYAN${duration.formattedSeconds()}s$ANSI_PURPLE.$ANSI_RESET")
 }

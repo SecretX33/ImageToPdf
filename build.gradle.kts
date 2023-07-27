@@ -27,6 +27,7 @@ dependencies {
     implementation("com.1stleg:jnativehook:2.1.0")
     implementation("info.picocli:picocli:4.7.4")
     kapt("info.picocli:picocli-codegen:4.7.4")
+    implementation("org.fusesource.jansi:jansi:2.4.0")
 }
 
 kapt {
