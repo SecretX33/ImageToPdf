@@ -4,8 +4,9 @@ ImageToPdf is a Kotlin CLI tool that allows you to convert images into PDF files
 
 ## Features
 
-- Convert images into PDF files, optionally also converting the images to JPG format using an optional quality factor to reduce file size.
+- Convert images into PDF files just by drag-and-drop them into the program.
 - Create a single PDF with all images, or one PDF per image, at your choice.
+- Convert the images to JPG format using an optional quality factor to reduce the PDF file size.
 - Automatic sorting of inputted files based on different criteria, including name, name descending, created date, created date descending, modified date, and modified date descending.
 
 ## Download
@@ -26,7 +27,12 @@ This is a Java (JVM) project, so remember to install [Java 17](https://adoptium.
 There's a brief explanation of *when* to choose each script.
 
 - [`!combine.bat`](scripts/!combine.bat): will create a single `.pdf` with all dragged images **COMBINED**.
-- [`!each.bat`](scripts/!each.bat): will create multiple `.pdf`, once for **EACH** dragged image.
+
+![](assets/gifs/combine_showcase.gif)
+
+- [`!each.bat`](scripts/!each.bat): will create multiple `.pdf`, one for **EACH** dragged image.
+  
+![](assets/gifs/each_showcase.gif)
 
 **Hint:** to easily download the scripts, right-click on the links above and select `Save Link As...`.
 
@@ -98,11 +104,13 @@ Replace `FILE...` with the paths to the images you want to convert. The `--sort`
 
 ### 6. Manually reorder images in the PDF
 
-To manually reorder the files before creating the PDF:
+To manually reorder the files before creating the PDF, use the interactive mode:
 ```
-java -jar "path/to/ImageToPdf.jar" FILE... -i
+java -jar "path/to/ImageToPdf.jar" FILE... --interactive
 ```
-Replace `FILE...` with the paths to the images you want to convert. The `-i` flag enables interactive mode, allowing you to reorder the files manually.
+Replace `FILE...` with the paths to the images you want to convert. The `-i` or `--interactive` flag enables interactive mode, allowing you to reorder the files manually.
+
+![](assets/gifs/interactive_showcase.gif)
 
 #### Commands
 Remember to use `UP` and `DOWN` arrows to move around the files, `Enter` or `SPACE` to select, deselect and swap files, and after you're done, hit `Esc` or `Q` to confirm the current order. 
