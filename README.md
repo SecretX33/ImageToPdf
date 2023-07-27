@@ -105,7 +105,7 @@ java -jar "path/to/ImageToPdf.jar" FILE... -i
 Replace `FILE...` with the paths to the images you want to convert. The `-i` flag enables interactive mode, allowing you to reorder the files manually.
 
 #### Commands
-Remember to use `UP` and `DOWN` arrows to move around the files, `SPACE` to select, deselect and swap files, and after you're done, hit `Esc`, `Q` or `Enter` to confirm the current order. 
+Remember to use `UP` and `DOWN` arrows to move around the files, `Enter` or `SPACE` to select, deselect and swap files, and after you're done, hit `Esc` or `Q` to confirm the current order. 
 
 ## Notes
 

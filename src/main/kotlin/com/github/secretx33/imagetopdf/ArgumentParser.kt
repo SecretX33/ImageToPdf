@@ -12,6 +12,7 @@ import com.github.secretx33.imagetopdf.util.bail
 import com.github.secretx33.imagetopdf.util.disableAnnoyingJnativehookLogger
 import com.github.secretx33.imagetopdf.util.getTextResource
 import com.github.secretx33.imagetopdf.util.quitProgram
+import org.fusesource.jansi.Ansi
 import org.jnativehook.GlobalScreen
 import org.jnativehook.NativeHookException
 import org.jnativehook.keyboard.NativeKeyEvent
@@ -126,56 +127,69 @@ private val Path.attributes: BasicFileAttributes
 private fun interactivelyReorderFiles(files: Set<Path>): Set<Path> {
     val mutableFiles = files.toMutableList()
 
-    println("${ANSI_PURPLE}Hint: Use your keyboard ${ANSI_GREEN}UP$ANSI_PURPLE and ${ANSI_GREEN}DOWN$ANSI_PURPLE arrows to navigate the files, ${ANSI_GREEN}Space$ANSI_PURPLE to swap their places$ANSI_PURPLE, and ${ANSI_GREEN}Q$ANSI_PURPLE, ${ANSI_GREEN}Enter$ANSI_PURPLE, or ${ANSI_GREEN}ESC$ANSI_PURPLE to confirm$ANSI_RESET")
+    println("${ANSI_PURPLE}Hint: Use your keyboard ${ANSI_GREEN}UP$ANSI_PURPLE and ${ANSI_GREEN}DOWN$ANSI_PURPLE arrows to navigate the files, ${ANSI_GREEN}Enter$ANSI_PURPLE or ${ANSI_GREEN}Space$ANSI_PURPLE to swap their places$ANSI_PURPLE, and ${ANSI_GREEN}ESC$ANSI_PURPLE or ${ANSI_GREEN}Q$ANSI_PURPLE to confirm the current file order and start the PDF conversion.$ANSI_RESET")
 
     var isReordering = true
     var cursorIndex = 0
-    var itemSelectedIndex: Int? = null
+    var isItemSelected = false
     val keyListener = SimpleNativeKeyListener()
+    var isFirstRun = true
 
     while (isReordering) {
-        printCurrentFilesForReorder(mutableFiles, cursorIndex, itemSelectedIndex)
+        printCurrentFilesForReorder(mutableFiles, cursorIndex, isItemSelected, isFirstRun)
         when (getReorderOption(keyListener)) {
-            ReorderOption.UP -> cursorIndex = (cursorIndex - 1).coerceAtLeast(0)
-            ReorderOption.DOWN -> cursorIndex = (cursorIndex + 1).coerceAtMost(mutableFiles.lastIndex)
-            ReorderOption.SELECT -> itemSelectedIndex = when (itemSelectedIndex) {
-                null -> cursorIndex  // Select current item
-                cursorIndex -> null  // Unselect current item
-                else -> {            // Swap items
-                    Collections.swap(mutableFiles, cursorIndex, itemSelectedIndex)
-                    null
+            ReorderOption.UP -> {
+                val newCursorIndex = (cursorIndex - 1).coerceAtLeast(0)
+                if (isItemSelected && cursorIndex != newCursorIndex) {
+                    Collections.swap(mutableFiles, cursorIndex, newCursorIndex)
                 }
+                cursorIndex = newCursorIndex
             }
-            ReorderOption.QUIT -> isReordering = false
+            ReorderOption.DOWN -> {
+                val newCursorIndex = (cursorIndex + 1).coerceAtMost(mutableFiles.lastIndex)
+                if (isItemSelected && cursorIndex != newCursorIndex) {
+                    Collections.swap(mutableFiles, cursorIndex, newCursorIndex)
+                }
+                cursorIndex = newCursorIndex
+            }
+            ReorderOption.SELECT -> isItemSelected = !isItemSelected
+            ReorderOption.CONFIRM -> isReordering = false
         }
+        isFirstRun = false
     }
+
+    println(Ansi.ansi().cursorUpLine(files.size + 5).eraseScreen(Ansi.Erase.FORWARD))
 
     keyListener.close()
     return mutableFiles.toSet()
 }
 
 private fun printCurrentFilesForReorder(
-    files: Iterable<Path>,
+    files: Collection<Path>,
     cursorIndex: Int,
-    itemSelectedIndex: Int?,
+    isItemSelected: Boolean,
+    isFirstRun: Boolean,
 ) {
     val fileSelector = files.mapIndexed { index, path ->
         val isHoveringItem = cursorIndex == index
-        val isItemSelected = itemSelectedIndex == index
 
         buildString {
             append(
                 when {
                     isHoveringItem && isItemSelected -> " $ANSI_PURPLE-> $ANSI_RED* "
                     isHoveringItem -> "   $ANSI_PURPLE-> "
-                    isItemSelected -> "    $ANSI_RED* "
                     else -> "      "
                 }
             )
             append("$ANSI_GREEN${index + 1}.$ANSI_RESET ${path.absolutePathString()}")
         }
-    }.joinToString(System.lineSeparator(), prefix = "${System.lineSeparator()}${ANSI_PURPLE}Files: $ANSI_RESET${System.lineSeparator()}")
-    println(fileSelector)
+    }.joinToString(System.lineSeparator(), prefix = "${ANSI_PURPLE}Files: $ANSI_RESET${System.lineSeparator()}")
+
+    if (isFirstRun) {
+        println("${System.lineSeparator()}$fileSelector")
+    } else {
+        println(Ansi.ansi().cursorUpLine(files.size + 1).eraseScreen(Ansi.Erase.FORWARD).a(fileSelector))
+    }
 }
 
 private fun getReorderOption(keyListener: SimpleNativeKeyListener): ReorderOption {
@@ -184,8 +198,8 @@ private fun getReorderOption(keyListener: SimpleNativeKeyListener): ReorderOptio
     return when (event.keyCode) {
         NativeKeyEvent.VC_UP -> ReorderOption.UP
         NativeKeyEvent.VC_DOWN -> ReorderOption.DOWN
-        NativeKeyEvent.VC_SPACE -> ReorderOption.SELECT
-        NativeKeyEvent.VC_ENTER, NativeKeyEvent.VC_ESCAPE, NativeKeyEvent.VC_Q -> ReorderOption.QUIT
+        NativeKeyEvent.VC_ENTER, NativeKeyEvent.VC_SPACE -> ReorderOption.SELECT
+        NativeKeyEvent.VC_ESCAPE, NativeKeyEvent.VC_Q -> ReorderOption.CONFIRM
         else -> bail("Error: Key number '$event' is not mapped.")
     }
 }
@@ -212,7 +226,7 @@ private enum class ReorderOption {
     UP,
     DOWN,
     SELECT,
-    QUIT,
+    CONFIRM,
 }
 
 private class SimpleNativeKeyListener : NativeKeyListener, Closeable {
