@@ -81,7 +81,7 @@ jobs:
           echo "release_name=$release_name" >> $GITHUB_OUTPUT
 
       - name: Delete existing tag and release (only forced releases)
-        uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        uses: dev-drprasad/delete-tag-and-release@v1.0
         if: inputs.build_mode == 'build and release (force)'
         with:
           tag_name: ${{ steps.version.outputs.version }}
