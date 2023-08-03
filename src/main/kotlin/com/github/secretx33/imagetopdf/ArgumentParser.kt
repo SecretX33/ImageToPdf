@@ -18,7 +18,6 @@ import org.jnativehook.NativeHookException
 import org.jnativehook.keyboard.NativeKeyEvent
 import org.jnativehook.keyboard.NativeKeyListener
 import picocli.CommandLine
-import java.io.Closeable
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.Collections
@@ -72,16 +71,6 @@ private fun CliParams.validate(): CliParams = apply {
     }
 }
 
-private fun <T> validateInRange(
-    number: T?,
-    range: ClosedRange<T>,
-    message: (ClosedRange<T>) -> String,
-) where T : Number, T : Comparable<T> {
-    if (number != null && number !in range) {
-        bail(message(range))
-    }
-}
-
 private fun validatePaths(paths: Array<Path>) {
     if (paths.isEmpty()) {
         bail("Invalid argument: this program requires at least one file passed as argument.")
@@ -99,6 +88,16 @@ private fun validatePaths(paths: Array<Path>) {
 private val supportedExtensions = setOf("jpg", "jpeg", "png")
 
 private fun Path.isSupportedFormat(): Boolean = supportedExtensions.any { extension.equals(it, ignoreCase = true) }
+
+private fun <T> validateInRange(
+    number: T?,
+    range: ClosedRange<T>,
+    message: (ClosedRange<T>) -> String,
+) where T : Number, T : Comparable<T> {
+    if (number != null && number !in range) {
+        bail(message(range))
+    }
+}
 
 private fun printGreetings() = println("$ANSI_RESET${getTextResource("banner.txt")}${System.lineSeparator()}")
 
@@ -127,40 +126,40 @@ private val Path.attributes: BasicFileAttributes
 private fun interactivelyReorderFiles(files: Set<Path>): Set<Path> {
     val mutableFiles = files.toMutableList()
 
-    println("${ANSI_PURPLE}Hint: Use your keyboard ${ANSI_GREEN}UP$ANSI_PURPLE and ${ANSI_GREEN}DOWN$ANSI_PURPLE arrows to navigate the files, ${ANSI_GREEN}Enter$ANSI_PURPLE or ${ANSI_GREEN}Space$ANSI_PURPLE to swap their places$ANSI_PURPLE, and ${ANSI_GREEN}ESC$ANSI_PURPLE or ${ANSI_GREEN}Q$ANSI_PURPLE to confirm the current file order and start the PDF conversion.$ANSI_RESET")
+    println("${ANSI_PURPLE}Hint: Use your keyboard ${ANSI_GREEN}UP$ANSI_PURPLE and ${ANSI_GREEN}DOWN$ANSI_PURPLE arrows to navigate the files, ${ANSI_GREEN}Enter$ANSI_PURPLE or ${ANSI_GREEN}Space$ANSI_PURPLE to start or stop dragging a file, and ${ANSI_GREEN}ESC$ANSI_PURPLE or ${ANSI_GREEN}Q$ANSI_PURPLE to confirm the current file order and start the PDF conversion.$ANSI_RESET")
 
     var isReordering = true
     var cursorIndex = 0
     var isItemSelected = false
-    val keyListener = SimpleNativeKeyListener()
     var isFirstRun = true
 
-    while (isReordering) {
-        printCurrentFilesForReorder(mutableFiles, cursorIndex, isItemSelected, isFirstRun)
-        when (getReorderOption(keyListener)) {
-            ReorderOption.UP -> {
-                val newCursorIndex = (cursorIndex - 1).coerceAtLeast(0)
-                if (isItemSelected && cursorIndex != newCursorIndex) {
-                    Collections.swap(mutableFiles, cursorIndex, newCursorIndex)
+    SimpleNativeKeyListener().use { keyListener ->
+        while (isReordering) {
+            printCurrentFilesForReorder(mutableFiles, cursorIndex, isItemSelected, isFirstRun)
+            when (getReorderOption(keyListener)) {
+                ReorderOption.UP -> {
+                    val newCursorIndex = (cursorIndex - 1).coerceAtLeast(0)
+                    if (isItemSelected && cursorIndex != newCursorIndex) {
+                        Collections.swap(mutableFiles, cursorIndex, newCursorIndex)
+                    }
+                    cursorIndex = newCursorIndex
                 }
-                cursorIndex = newCursorIndex
-            }
-            ReorderOption.DOWN -> {
-                val newCursorIndex = (cursorIndex + 1).coerceAtMost(mutableFiles.lastIndex)
-                if (isItemSelected && cursorIndex != newCursorIndex) {
-                    Collections.swap(mutableFiles, cursorIndex, newCursorIndex)
+                ReorderOption.DOWN -> {
+                    val newCursorIndex = (cursorIndex + 1).coerceAtMost(mutableFiles.lastIndex)
+                    if (isItemSelected && cursorIndex != newCursorIndex) {
+                        Collections.swap(mutableFiles, cursorIndex, newCursorIndex)
+                    }
+                    cursorIndex = newCursorIndex
                 }
-                cursorIndex = newCursorIndex
+                ReorderOption.SELECT -> isItemSelected = !isItemSelected
+                ReorderOption.CONFIRM -> isReordering = false
             }
-            ReorderOption.SELECT -> isItemSelected = !isItemSelected
-            ReorderOption.CONFIRM -> isReordering = false
+            isFirstRun = false
         }
-        isFirstRun = false
     }
 
     println(Ansi.ansi().cursorUpLine(files.size + 5).eraseScreen(Ansi.Erase.FORWARD))
 
-    keyListener.close()
     return mutableFiles.toSet()
 }
 
@@ -229,10 +228,10 @@ private enum class ReorderOption {
     CONFIRM,
 }
 
-private class SimpleNativeKeyListener : NativeKeyListener, Closeable {
+private class SimpleNativeKeyListener : NativeKeyListener, AutoCloseable {
 
     private val isRegistered = AtomicBoolean(false)
-    private val callback = AtomicReference<CompletableFuture<NativeKeyEvent>>(null)
+    private val callback = AtomicReference<CompletableFuture<NativeKeyEvent>?>(null)
 
     override fun nativeKeyTyped(event: NativeKeyEvent) = handleKeyPress(event)
 
@@ -274,11 +273,11 @@ private class SimpleNativeKeyListener : NativeKeyListener, Closeable {
     }
 
     override fun close() {
+        if (!isRegistered.compareAndSet(true, false)) return
         try {
             GlobalScreen.unregisterNativeHook()
         } finally {
             GlobalScreen.removeNativeKeyListener(this)
-            isRegistered.set(false)
         }
     }
 

@@ -17,7 +17,24 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import java.awt.Color
 import java.awt.Graphics2D
-import java.awt.RenderingHints.*
+import java.awt.RenderingHints.KEY_ALPHA_INTERPOLATION
+import java.awt.RenderingHints.KEY_ANTIALIASING
+import java.awt.RenderingHints.KEY_COLOR_RENDERING
+import java.awt.RenderingHints.KEY_DITHERING
+import java.awt.RenderingHints.KEY_FRACTIONALMETRICS
+import java.awt.RenderingHints.KEY_INTERPOLATION
+import java.awt.RenderingHints.KEY_RENDERING
+import java.awt.RenderingHints.KEY_STROKE_CONTROL
+import java.awt.RenderingHints.KEY_TEXT_ANTIALIASING
+import java.awt.RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY
+import java.awt.RenderingHints.VALUE_ANTIALIAS_ON
+import java.awt.RenderingHints.VALUE_COLOR_RENDER_QUALITY
+import java.awt.RenderingHints.VALUE_DITHER_DISABLE
+import java.awt.RenderingHints.VALUE_FRACTIONALMETRICS_ON
+import java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC
+import java.awt.RenderingHints.VALUE_RENDER_QUALITY
+import java.awt.RenderingHints.VALUE_STROKE_PURE
+import java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON
 import java.awt.image.BufferedImage
 import java.awt.image.RenderedImage
 import java.nio.file.Path
@@ -33,7 +50,6 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
 import kotlin.io.path.outputStream
-
 
 fun createPdf(file: Path, block: PDDocument.() -> Unit) = try {
     PDDocument().use { document ->
@@ -107,18 +123,12 @@ private fun PDImageXObject.resize(
     val widthScaled = dimensionTuple.modified.getWidth().toInt()
     val heightScaled = dimensionTuple.modified.getHeight().toInt()
 
-    val resizedImage = BufferedImage(widthScaled, heightScaled, image.colorModel.hasAlpha())
-    val graphics = resizedImage.createGraphics().apply {
+    val resizedImage = BufferedImage(widthScaled, heightScaled, image.colorModel.hasAlpha()).graphics {
         setRenderingHints(RENDERING_HINTS)
         transform = transform.apply {
             setToScale(dimensionTuple.widthRatio, dimensionTuple.heightRatio)
         }
-    }
-
-    try {
-        graphics.drawImage(image, 0, 0, null)
-    } finally {
-        graphics.dispose()
+        drawImage(image, 0, 0, null)
     }
 
     return resizedImage.toPDImageXObject(document, fileName)

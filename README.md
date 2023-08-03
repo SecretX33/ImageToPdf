@@ -108,12 +108,12 @@ To manually reorder the files before creating the PDF, use the interactive mode:
 ```
 java -jar "path/to/ImageToPdf.jar" FILE... --interactive
 ```
-Replace `FILE...` with the paths to the images you want to convert. The `-i` or `--interactive` flag enables interactive mode, allowing you to reorder the files manually.
+Replace `FILE...` with the paths to the images you want to convert. The `-i` or `--interactive` flag enables interactive mode, allowing you to reorder the files manually by drag and dropping the files.
 
 ![](assets/gifs/interactive_showcase.gif)
 
 #### Commands
-Remember to use `UP` and `DOWN` arrows to move around the files, `Enter` or `SPACE` to select, deselect and swap files, and after you're done, hit `Esc` or `Q` to confirm the current order. 
+Remember to use `UP` and `DOWN` arrows to move around the files, `Enter` or `SPACE` to start and stop dragging a file, and after you're done, hit `Esc` or `Q` to confirm the current order. 
 
 ## Notes
 

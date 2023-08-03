@@ -19,7 +19,7 @@ private val thisClass = MethodHandles.lookup().lookupClass()
 
 fun printError(message: String) = System.err.println(message)
 
-fun bail(message: String): Nothing = throw QuitApplicationException(message)
+fun bail(message: String): Nothing = throw QuitApplicationException(message, exitCode = 1)
 
 fun quitProgram(): Nothing = throw QuitApplicationException(exitCode = 0)
 
