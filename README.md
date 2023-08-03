@@ -4,9 +4,10 @@ ImageToPdf is a Kotlin CLI tool that allows you to convert images into PDF files
 
 ## Features
 
-- Convert images into PDF files just by drag-and-drop them into the program.
+- Create PDFs from a single or multiple images.
+- Drag-and-drop support with the provided scripts.
 - Create a single PDF with all images, or one PDF per image, at your choice.
-- Convert the images to JPG format using an optional quality factor to reduce the PDF file size.
+- Optionally reduce PDF size by converting the images to `.jpg`. 
 - Automatic sorting of inputted files based on different criteria, including name, name descending, created date, created date descending, modified date, and modified date descending.
 
 ## Download
@@ -17,10 +18,15 @@ This is a Java (JVM) project, so remember to install [Java 17](https://adoptium.
 
 ## Quick Start
 
+0. Install [Java](#Download) if you don't have it already.
 1. Download the [app binary](https://github.com/SecretX33/ImageToPdf/releases/latest/download/ImageToPdf.jar).
 2. Download all [scripts](scripts), they facilitate this app usage by **a lot**.
-3. Open the downloaded scripts and replace `{{SET_THE_PATH_HERE}}` in both scripts by the actual folder where you saved the downloaded `ImageToPdf.jar` file.
-4. Done! To start creating PDFs, just drag-and-drop the images on the chosen script.
+3. Open the downloaded scripts and replace `{{SET_THE_PATH_HERE}}` in both scripts by the actual folder where you saved the downloaded `ImageToPdf.jar` file. 
+
+ 
+Done! 
+
+To start creating PDFs, just drag-and-drop the images on the chosen script.
 
 ## Scripts
 
@@ -58,7 +64,9 @@ To convert multiple images to a single PDF without any additional processing:
 ```
 java -jar "path/to/ImageToPdf.jar" FILE... --combine
 ```
-Replace `FILE...` with the paths to the images you want to include in the PDF. `--combine` flag will make the program create a single PDF with all provided `FILE...`.
+Replace `FILE...` with the paths to the images you want to include in the PDF. 
+
+Flag `--combine` will make the program create a single PDF with all provided `FILE...`.
 
 #### Example
 This example will create a single PDF containing all the provided images.
@@ -68,11 +76,12 @@ java -jar "path/to/ImageToPdf.jar" "C:\Users\User\Pictures\a.jpg" "C:\Users\User
 
 ### 3. Resize images
 
-To resize the images resolution in the final PDF:
 ```
 java -jar "path/to/ImageToPdf.jar" FILE... --resize <imageResizeFactor>
 ```
-Replace `FILE...` with the paths to the images you want to convert. Use `--resize` option with a number to scale the image resolution by that factor (e.g., 0.5, 2.0), default is `1.0`.
+Replace `FILE...` with the paths to the images you want to convert. 
+
+Use `--resize` option with a number to scale the image resolution by that factor (e.g., 0.5, 2.0), default is `1.0`.
 
 #### Example
 This example will reduce the image size to `75%` before adding them to the PDF.
@@ -81,19 +90,21 @@ java -jar "path/to/ImageToPdf.jar" "C:\Users\User\Pictures\a.jpg" --resize 0.75
 ```
 
 ### 4. Compress images to JPG to reduce overall size
-
-To convert images to a single PDF while specifying a JPG quality factor:
 ```
 java -jar "path/to/ImageToPdf.jar" FILE... --jpg-quality <jpgQuality>
 ```
-Replace `FILE...` with the paths to the images you want to convert. `--jpg-quality` is the JPG quality and <jpgQuality> is a number between `0.0` and `1.0` to set the JPG quality factor (the greater this value, the bigger the image).
+Replace `FILE...` with the paths to the images you want to convert. 
+
+Flag `--jpg-quality` is the JPG quality and <jpgQuality> is a number between `0.0` and `1.0` to set the JPG quality factor (the greater this value, the bigger the image).
 
 ### 5. Automatically reorder images in the PDF
 
 ```
 java -jar "path/to/ImageToPdf.jar" FILE... --sort <sortFilesBy>
 ```
-Replace `FILE...` with the paths to the images you want to convert. The `--sort` flag allows you to specify the sorting criterion`, possible options are:
+Replace `FILE...` with the paths to the images you want to convert. 
+
+The `--sort` flag allows you to specify the sorting criterion`, possible options are:
 
 - `NAME`: Sort files based on their name.
 - `NAME_DESC`: Sort files based on their name, descending.
