@@ -85,9 +85,8 @@ jobs:
         if: inputs.build_mode == 'build and release (force)'
         with:
           tag_name: ${{ steps.version.outputs.version }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           delete_release: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create release
         uses: softprops/action-gh-release@v1
