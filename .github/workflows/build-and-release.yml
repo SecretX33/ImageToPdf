@@ -47,7 +47,7 @@ jobs:
       - name: Move artifacts
         run: |
           mkdir -v -p dist
-          for jar in dist/*/*.jar; do cp -v "$jar" dist/; done
+          for jar in dist/*/*.jar; do mv -v "$jar" dist/; done
           find dist -type f -empty -print -delete -o -type d -empty -print -delete
 
       - name: List dist folder contents
@@ -96,4 +96,4 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
-            ./dist/ImageToPdf.jar
+            ./dist/*.jar

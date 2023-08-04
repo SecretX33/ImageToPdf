@@ -12,7 +12,7 @@ ImageToPdf is a Kotlin CLI tool that allows you to convert images into PDF files
 
 ## Download
 
-Download the latest compiled binary by clicking [HERE](https://github.com/SecretX33/ImageToPdf/releases/latest/download/ImageToPdf.jar).
+Download the latest-compiled binary by clicking [HERE](https://github.com/SecretX33/ImageToPdf/releases/latest/download/ImageToPdf.jar).
 
 This is a Java (JVM) project, so remember to install [Java 17](https://adoptium.net/temurin/releases/?version=17) to run it if you don't have it already.
 
@@ -23,7 +23,6 @@ This is a Java (JVM) project, so remember to install [Java 17](https://adoptium.
 2. Download all [scripts](scripts), they facilitate this app usage by **a lot**.
 3. Open the downloaded scripts and replace `{{SET_THE_PATH_HERE}}` in both scripts by the actual folder where you saved the downloaded `ImageToPdf.jar` file. 
 
- 
 Done! 
 
 To start creating PDFs, just drag-and-drop the images on the chosen script.
@@ -97,7 +96,7 @@ Replace `FILE...` with the paths to the images you want to convert.
 
 Flag `--jpg-quality` is the JPG quality and <jpgQuality> is a number between `0.0` and `1.0` to set the JPG quality factor (the greater this value, the bigger the image).
 
-### 5. Automatically reorder images in the PDF
+### 5. Automatically sort files based on criteria
 
 ```
 java -jar "path/to/ImageToPdf.jar" FILE... --sort <sortFilesBy>
@@ -119,11 +118,13 @@ To manually reorder the files before creating the PDF, use the interactive mode:
 ```
 java -jar "path/to/ImageToPdf.jar" FILE... --interactive
 ```
-Replace `FILE...` with the paths to the images you want to convert. The `-i` or `--interactive` flag enables interactive mode, allowing you to reorder the files manually by drag and dropping the files.
+Replace `FILE...` with the paths to the images you want to convert. 
+
+The `-i` or `--interactive` flag enables interactive mode, allowing you to reorder the files manually by drag and dropping the files.
 
 ![](assets/gifs/interactive_showcase.gif)
 
-#### Commands
+### Commands
 Remember to use `UP` and `DOWN` arrows to move around the files, `Enter` or `SPACE` to start and stop dragging a file, and after you're done, hit `Esc` or `Q` to confirm the current order. 
 
 ## Notes
