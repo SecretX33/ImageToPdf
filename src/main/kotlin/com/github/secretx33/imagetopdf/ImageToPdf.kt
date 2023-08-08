@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 import org.fusesource.jansi.AnsiConsole
 import java.nio.file.Path
@@ -79,10 +80,8 @@ private suspend fun createMultipleFiles(settings: Settings) = withContext(Dispat
         createPdf(pdfFile) {
             addImage(createPdfImage(picture, settings), settings)
         }
-        pdfFile
-    }.collect {
-        notifyPdfCreated(it)
-    }
+        notifyPdfCreated(pdfFile)
+    }.collect()
 }
 
 private fun createPdfPath(picture: Path): Path = picture.absoluteParent / "${picture.nameWithoutExtension}.pdf"
