@@ -1,7 +1,7 @@
 @echo off
 SETLOCAL EnableExtensions
 
-set "EXE_PATH=build\native\nativeCompile\ImageToPdf.exe"
+set "EXE_PATH=build\libs\ImageToPdf.exe"
 
 cd ..
 cd ..

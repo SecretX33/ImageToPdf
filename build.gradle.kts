@@ -71,6 +71,13 @@ tasks.named<BuildNativeImageTask>("nativeCompile") {
     val shadowJar = tasks.shadowJar.get()
     dependsOn(shadowJar)
     classpathJar.set(shadowJar.archiveFile)
+    doLast {
+        copy {
+            val file = file("$buildDir/native/nativeCompile/${executableName.get()}").absolutePath
+            println("File = $file")
+            from(file).into("$buildDir/libs")
+        }
+    }
 }
 
 // https://graalvm.github.io/native-build-tools/latest/gradle-plugin.html
