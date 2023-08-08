@@ -1,0 +1,16 @@
+{
+  "resources":{
+  "includes":[{
+    "pattern":"\\Qbanner.txt\\E"
+  }, {
+    "pattern":"\\Qorg/fusesource/jansi/internal/native/Windows/x86_64/jansi.dll\\E"
+  }, {
+    "pattern":"\\Qorg/fusesource/jansi/jansi.properties\\E"
+  }, {
+    "pattern":"\\Qorg/jnativehook/lib/windows/x86_64/JNativeHook.dll\\E"
+  }]},
+  "bundles":[{
+    "name":"sun.awt.resources.awt",
+    "classNames":["sun.awt.resources.awt"]
+  }]
+}
