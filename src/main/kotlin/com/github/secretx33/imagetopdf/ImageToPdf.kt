@@ -1,7 +1,11 @@
+@file:OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+
 package com.github.secretx33.imagetopdf
 
+import arrow.fx.coroutines.parMap
 import com.github.secretx33.imagetopdf.convert.addImage
 import com.github.secretx33.imagetopdf.convert.createPdf
+import com.github.secretx33.imagetopdf.convert.createPdfImage
 import com.github.secretx33.imagetopdf.exception.QuitApplicationException
 import com.github.secretx33.imagetopdf.model.CombineMode
 import com.github.secretx33.imagetopdf.model.Settings
@@ -13,6 +17,12 @@ import com.github.secretx33.imagetopdf.util.absoluteParent
 import com.github.secretx33.imagetopdf.util.formattedFileSize
 import com.github.secretx33.imagetopdf.util.formattedSeconds
 import com.github.secretx33.imagetopdf.util.printError
+import com.github.secretx33.imagetopdf.util.threadAmount
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.withContext
 import org.fusesource.jansi.AnsiConsole
 import java.nio.file.Path
 import kotlin.io.path.div
@@ -22,7 +32,7 @@ import kotlin.system.exitProcess
 import kotlin.time.Duration
 import kotlin.time.measureTime
 
-fun main(args: Array<String>) {
+suspend fun main(args: Array<String>) {
     try {
         bootstrapApplication(args)
     } catch (t: Throwable) {
@@ -34,7 +44,7 @@ fun main(args: Array<String>) {
     }
 }
 
-private fun bootstrapApplication(args: Array<String>) {
+private suspend fun bootstrapApplication(args: Array<String>) {
     AnsiConsole.systemInstall()
     val settings = fetchSettings(args)
     val duration = measureTime {
@@ -43,7 +53,7 @@ private fun bootstrapApplication(args: Array<String>) {
     printSuccessMessage(settings, duration)
 }
 
-private fun createPdfs(settings: Settings) {
+private suspend fun createPdfs(settings: Settings) {
     println("${ANSI_PURPLE}Generating PDFs, sit back and relax, this can take a while...$ANSI_RESET")
     if (settings.combineMode == CombineMode.SINGLE_FILE) {
         createSingleFile(settings)
@@ -52,23 +62,26 @@ private fun createPdfs(settings: Settings) {
     }
 }
 
-private fun createSingleFile(settings: Settings) {
+private suspend fun createSingleFile(settings: Settings) = withContext(Dispatchers.IO) {
     val pdfFile = createPdfPath(settings.files.first())
     createPdf(pdfFile) {
-        settings.files.forEach { picture ->
-            addImage(picture, settings)
-        }
+        settings.files.asFlow().parMap(threadAmount) { createPdfImage(it, settings) }
+            .collect {
+                addImage(it, settings)
+            }
     }
     notifyPdfCreated(pdfFile)
 }
 
-private fun createMultipleFiles(settings: Settings) {
-    settings.files.forEach { picture ->
+private suspend fun createMultipleFiles(settings: Settings) = withContext(Dispatchers.IO) {
+    settings.files.asFlow().parMap(threadAmount) { picture ->
         val pdfFile = createPdfPath(picture)
         createPdf(pdfFile) {
-            addImage(picture, settings)
+            addImage(createPdfImage(picture, settings), settings)
         }
-        notifyPdfCreated(pdfFile)
+        pdfFile
+    }.collect {
+        notifyPdfCreated(it)
     }
 }
 
