@@ -1,6 +1,6 @@
 package com.github.secretx33.imagetopdf.convert
 
-import com.github.secretx33.imagetopdf.model.LazyImage
+import com.github.secretx33.imagetopdf.model.PdfImage
 import com.github.secretx33.imagetopdf.model.Settings
 import com.github.secretx33.imagetopdf.util.ANSI_RESET
 import com.github.secretx33.imagetopdf.util.ANSI_YELLOW
@@ -8,7 +8,6 @@ import com.github.secretx33.imagetopdf.util.absoluteParent
 import com.github.secretx33.imagetopdf.util.bail
 import com.github.secretx33.imagetopdf.util.byteArrayOutputStream
 import com.github.secretx33.imagetopdf.util.formattedFileSize
-import com.github.secretx33.imagetopdf.util.lazyNone
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
@@ -51,7 +50,7 @@ import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
 import kotlin.io.path.outputStream
 
-fun createPdf(file: Path, block: PDDocument.() -> Unit) = try {
+inline fun createPdf(file: Path, block: PDDocument.() -> Unit) = try {
     PDDocument().use { document ->
         document.block()
         if (file.isRegularFile()) {
@@ -65,27 +64,27 @@ fun createPdf(file: Path, block: PDDocument.() -> Unit) = try {
     bail("Error creating file ${file.absolutePathString()}.\n${e.stackTraceToString()}")
 }
 
+fun PDDocument.createPdfImage(picture: Path, settings: Settings): PdfImage = pdfImage(picture)
+    .resize(settings.imageResizeFactor)
+    .compressToJpg(settings.jpgCompressionQuality)
+
 fun PDDocument.addImage(
-    picture: Path,
+    pdfImage: PdfImage,
     settings: Settings,
 ) {
-    val lazyImage = lazyImage(picture)
-        .resize(settings.imageResizeFactor)
-        .compressToJpg(settings.jpgCompressionQuality)
-
-    val scaled = ScalableDimension(lazyImage.width, lazyImage.height, settings.imageRenderFactor).scale()
+    val scaled = ScalableDimension(pdfImage.width, pdfImage.height, settings.imageRenderFactor).scale()
     val page = PDPage(PDRectangle(scaled.getWidth().toFloat(), scaled.getHeight().toFloat()))
         .also(::addPage)
 
     PDPageContentStream(this, page).use { contentStream ->
-        contentStream.drawImage(lazyImage.image, 0f, 0f, scaled.getWidth().toFloat(), scaled.getHeight().toFloat())
+        contentStream.drawImage(pdfImage.image, 0f, 0f, scaled.getWidth().toFloat(), scaled.getHeight().toFloat())
     }
 }
 
-private fun PDDocument.lazyImage(picture: Path): LazyImage {
+private fun PDDocument.pdfImage(picture: Path): PdfImage {
     val image = PDImageXObject.createFromFile(picture.absolutePathString(), this)
-    return LazyImage(
-        lazyImage = lazyNone { image },
+    return PdfImage(
+        image = image,
         fileName = picture.fileName,
         file = picture,
         width = image.width,
@@ -94,7 +93,7 @@ private fun PDDocument.lazyImage(picture: Path): LazyImage {
     )
 }
 
-private fun LazyImage.resize(factor: Double): LazyImage {
+private fun PdfImage.resize(factor: Double): PdfImage {
     if (factor == 1.0) {
         return this
     }
@@ -109,7 +108,7 @@ private fun LazyImage.resize(factor: Double): LazyImage {
         }
 
     return copy(
-        lazyImage = lazyNone { image.resize(dimensions, document, fileName) },
+        image = image.resize(dimensions, document, fileName),
         width = dimensions.modified.getWidth().toInt(),
         height = dimensions.modified.getHeight().toInt(),
     )
@@ -134,7 +133,7 @@ private fun PDImageXObject.resize(
     return resizedImage.toPDImageXObject(document, fileName)
 }
 
-private fun LazyImage.compressToJpg(jpgCompressionQuality: Double?): LazyImage {
+private fun PdfImage.compressToJpg(jpgCompressionQuality: Double?): PdfImage {
     if (jpgCompressionQuality == null) {
         return this
     }
@@ -142,10 +141,8 @@ private fun LazyImage.compressToJpg(jpgCompressionQuality: Double?): LazyImage {
 
     val newFileName = Path("${fileName.nameWithoutExtension}.jpg")
     return copy(
-        lazyImage = lazyNone {
-            image.convertToJpg(document, fileName)
-                .setJpgQuality(jpgCompressionQuality, document, newFileName)
-        },
+        image = image.convertToJpg(document, fileName)
+            .setJpgQuality(jpgCompressionQuality, document, newFileName),
         fileName = newFileName,
     )
 }

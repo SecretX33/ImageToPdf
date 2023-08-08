@@ -4,6 +4,7 @@ import com.github.secretx33.imagetopdf.exception.QuitApplicationException
 import org.jnativehook.GlobalScreen
 import java.io.ByteArrayOutputStream
 import java.lang.invoke.MethodHandles
+import java.lang.management.ManagementFactory
 import java.nio.file.Path
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
@@ -16,6 +17,8 @@ import kotlin.io.path.fileSize
 import kotlin.time.Duration
 
 private val thisClass = MethodHandles.lookup().lookupClass()
+
+val threadAmount: Int get() = ManagementFactory.getThreadMXBean().threadCount
 
 fun printError(message: String) = System.err.println(message)
 

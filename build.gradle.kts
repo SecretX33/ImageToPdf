@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "com.github.secretx33"
-version = "0.1.1"
+version = "0.1.2"
 
 val javaVersion = 17
 
@@ -23,11 +23,15 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+    implementation(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.7.3"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation("org.apache.pdfbox:pdfbox:3.0.0-beta1")
     implementation("com.1stleg:jnativehook:2.1.0")
     implementation("info.picocli:picocli:4.7.4")
     kapt("info.picocli:picocli-codegen:4.7.4")
     implementation("org.fusesource.jansi:jansi:2.4.0")
+    implementation(platform("io.arrow-kt:arrow-stack:1.2.0"))
+    implementation("io.arrow-kt:arrow-fx-coroutines")
 }
 
 kapt {
