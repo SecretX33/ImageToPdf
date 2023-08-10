@@ -47,7 +47,7 @@ jobs:
       - name: Move artifacts
         run: |
           mkdir -v -p dist
-          for jar in dist/*/*.jar; do mv -v "$jar" dist/; done
+          for file in dist/*/*; do mv -v "$file" dist/; done
           find dist -type f -empty -print -delete -o -type d -empty -print -delete
 
       - name: List dist folder contents
