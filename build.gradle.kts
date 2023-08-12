@@ -67,17 +67,29 @@ application {
     mainClass.set(mainClassName)
 }
 
-tasks.named<BuildNativeImageTask>("nativeCompile") {
-    val shadowJar = tasks.shadowJar.get()
-    dependsOn(shadowJar)
-    classpathJar.set(shadowJar.archiveFile)
+val addIconToBinary by tasks.registering(Exec::class) {
+    val rcEditBinaryFile = file("tools/rcedit.exe")
+    val appBinaryFile = file("$buildDir/native/nativeCompile/${project.name}.exe")
+    val iconFile = file("assets/icons/logo.ico")
+
+    doFirst {
+        println("Adding icon '$iconFile' to app binary '$appBinaryFile'")
+    }
+    commandLine(rcEditBinaryFile)
+    args(appBinaryFile, "--set-icon", iconFile)
+}
+
+val nativeCompile by tasks.existing(BuildNativeImageTask::class) {
+    dependsOn(tasks.shadowJar)
+    classpathJar.set(tasks.shadowJar.get().archiveFile)
     doLast {
         copy {
             val file = file("$buildDir/native/nativeCompile/${executableName.get()}").absolutePath
-            println("File = $file")
+            println("Binary: $file")
             from(file).into("$buildDir/libs")
         }
     }
+    finalizedBy(addIconToBinary)
 }
 
 // https://graalvm.github.io/native-build-tools/latest/gradle-plugin.html
@@ -90,7 +102,6 @@ graalvmNative {
                 "-R:MinHeapSize=1m",  // Xms
                 "-R:MaxHeapSize=1g",  // Xmx
                 "-H:Log=registerResource:2",  // Logs added resources
-                "-march=native",
             )
             runtimeArgs.add("-Djava.awt.headless=true")
             useFatJar.set(true)
