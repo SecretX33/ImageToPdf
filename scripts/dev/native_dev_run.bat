@@ -8,7 +8,6 @@ cd ..
 
 if not exist "%EXE_PATH%" (
     echo Could not find application compiled binary, please make sure the app is compiled before running this script
-    pause>nul
     goto END
 )
 

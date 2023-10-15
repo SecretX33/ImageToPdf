@@ -11,4 +11,3 @@ for %%A in (%*) do (
 java -Xms1m -Xmx1g -jar "%IMAGE_TO_PDF_JAR%" --resize 0.8 --jpg-quality 0.75 --sort name !files!
 
 endlocal
-exit

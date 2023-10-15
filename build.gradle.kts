@@ -92,6 +92,7 @@ graalvmNative {
                 "-H:Log=registerResource:2",  // Logs added resources
                 "-march=native",
             )
+            runtimeArgs.add("-Djava.awt.headless=true")
             useFatJar.set(true)
         }
     }

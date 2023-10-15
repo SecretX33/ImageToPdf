@@ -7,6 +7,7 @@ cd ..
 cd ..
 
 if not exist "%JAR_PATH%" (
+    echo App .jar was not found, executing 'shadowJar' task
     .\gradlew shadowJar
 )
 
