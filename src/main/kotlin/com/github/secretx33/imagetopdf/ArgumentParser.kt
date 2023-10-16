@@ -8,6 +8,7 @@ import com.github.secretx33.imagetopdf.util.ANSI_GREEN
 import com.github.secretx33.imagetopdf.util.ANSI_PURPLE
 import com.github.secretx33.imagetopdf.util.ANSI_RED
 import com.github.secretx33.imagetopdf.util.ANSI_RESET
+import com.github.secretx33.imagetopdf.util.absoluteParent
 import com.github.secretx33.imagetopdf.util.bail
 import com.github.secretx33.imagetopdf.util.disableAnnoyingJnativehookLogger
 import com.github.secretx33.imagetopdf.util.getTextResource
@@ -27,7 +28,10 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.extension
 import kotlin.io.path.isRegularFile
+import kotlin.io.path.name
+import kotlin.io.path.nameWithoutExtension
 import kotlin.io.path.notExists
+import kotlin.io.path.pathString
 import kotlin.io.path.readAttributes
 
 fun fetchSettings(args: Array<String>): Settings {
@@ -107,13 +111,14 @@ private fun Settings.sortFiles(): Settings = when {
     else -> this
 }
 
+private val CASE_INSENSITIVE_PATH_COMPARATOR = Comparator<Path> { o1, o2 ->
+    o1.absoluteParent.pathString.compareTo(o2.absoluteParent.pathString, ignoreCase = true)
+}.thenBy { it.nameWithoutExtension }
+    .thenBy { it.name }
+
 private fun Iterable<Path>.sortBy(sortFilesBy: SortFilesBy): List<Path> = when (sortFilesBy) {
-    SortFilesBy.NAME -> sortedWith { o1, o2 ->
-        String.CASE_INSENSITIVE_ORDER.compare(o1.absolutePathString(), o2.absolutePathString())
-    }
-    SortFilesBy.NAME_DESC -> sortedWith { o1, o2 ->
-        String.CASE_INSENSITIVE_ORDER.compare(o2.absolutePathString(), o1.absolutePathString())
-    }
+    SortFilesBy.NAME -> sortedWith(CASE_INSENSITIVE_PATH_COMPARATOR)
+    SortFilesBy.NAME_DESC -> sortedWith(CASE_INSENSITIVE_PATH_COMPARATOR.reversed())
     SortFilesBy.CREATED_DATE -> sortedBy { it.attributes.creationTime().toInstant() }
     SortFilesBy.CREATED_DATE_DESC -> sortedByDescending { it.attributes.creationTime().toInstant() }
     SortFilesBy.MODIFIED_DATE -> sortedBy { it.attributes.lastModifiedTime().toInstant() }

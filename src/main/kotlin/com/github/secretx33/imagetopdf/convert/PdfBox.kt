@@ -1,5 +1,6 @@
 package com.github.secretx33.imagetopdf.convert
 
+import arrow.core.nonFatalOrThrow
 import com.github.secretx33.imagetopdf.model.PdfImage
 import com.github.secretx33.imagetopdf.model.Settings
 import com.github.secretx33.imagetopdf.util.ANSI_RESET
@@ -15,6 +16,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import java.awt.Color
+import java.awt.Dimension
 import java.awt.Graphics2D
 import java.awt.RenderingHints.KEY_ALPHA_INTERPOLATION
 import java.awt.RenderingHints.KEY_ANTIALIASING
@@ -61,7 +63,7 @@ inline fun createPdf(file: Path, block: PDDocument.() -> Unit) = try {
         }
     }
 } catch (e: Exception) {
-    bail("Error creating file ${file.absolutePathString()}.\n${e.stackTraceToString()}")
+    bail("Error creating file ${file.absolutePathString()}.\n${e.nonFatalOrThrow().stackTraceToString()}")
 }
 
 fun PDDocument.createPdfImage(picture: Path, settings: Settings): PdfImage = pdfImage(picture)
@@ -75,14 +77,15 @@ fun PDDocument.addImage(
     val scaled = ScalableDimension(pdfImage.width, pdfImage.height, settings.imageRenderFactor).scale()
     val page = PDPage(PDRectangle(scaled.getWidth().toFloat(), scaled.getHeight().toFloat()))
         .also(::addPage)
+    val image = pdfImage.image.toPDImageXObject(this, pdfImage.fileName)
 
     PDPageContentStream(this, page).use { contentStream ->
-        contentStream.drawImage(pdfImage.image, 0f, 0f, scaled.getWidth().toFloat(), scaled.getHeight().toFloat())
+        contentStream.drawImage(image, 0f, 0f, scaled.getWidth().toFloat(), scaled.getHeight().toFloat())
     }
 }
 
 private fun PDDocument.pdfImage(picture: Path): PdfImage {
-    val image = PDImageXObject.createFromFile(picture.absolutePathString(), this)
+    val image = ImageIO.read(picture.toFile())
     return PdfImage(
         image = image,
         fileName = picture.fileName,
@@ -108,29 +111,24 @@ private fun PdfImage.resize(factor: Double): PdfImage {
         }
 
     return copy(
-        image = image.resize(dimensions, document, fileName),
+        image = image.resize(dimensions),
         width = dimensions.modified.getWidth().toInt(),
         height = dimensions.modified.getHeight().toInt(),
     )
 }
 
-private fun PDImageXObject.resize(
-    dimensionTuple: DimensionTuple,
-    document: PDDocument,
-    fileName: Path,
-): PDImageXObject {
+private fun BufferedImage.resize(dimensionTuple: DimensionTuple): BufferedImage {
     val widthScaled = dimensionTuple.modified.getWidth().toInt()
     val heightScaled = dimensionTuple.modified.getHeight().toInt()
 
-    val resizedImage = BufferedImage(widthScaled, heightScaled, image.colorModel.hasAlpha()).graphics {
+    val resizedImage = BufferedImage(widthScaled, heightScaled, colorModel.hasAlpha()).graphics {
         setRenderingHints(RENDERING_HINTS)
         transform = transform.apply {
             setToScale(dimensionTuple.widthRatio, dimensionTuple.heightRatio)
         }
-        drawImage(image, 0, 0, null)
+        drawImage(this@resize, 0, 0, null)
     }
-
-    return resizedImage.toPDImageXObject(document, fileName)
+    return resizedImage
 }
 
 private fun PdfImage.compressToJpg(jpgCompressionQuality: Double?): PdfImage {
@@ -139,43 +137,27 @@ private fun PdfImage.compressToJpg(jpgCompressionQuality: Double?): PdfImage {
     }
     require(jpgCompressionQuality in 0.0..1.0) { "JPG compression factor must be between 0 and 1 (actual: $jpgCompressionQuality)" }
 
+    val jpgImage = image.convertToJpg(dimension, fileName)
+        .setJpgQuality(jpgCompressionQuality)
     val newFileName = Path("${fileName.nameWithoutExtension}.jpg")
+
     return copy(
-        image = image.convertToJpg(document, fileName)
-            .setJpgQuality(jpgCompressionQuality, document, newFileName),
+        image = jpgImage,
         fileName = newFileName,
     )
 }
 
-private fun PDImageXObject.convertToJpg(document: PDDocument, fileName: Path): PDImageXObject {
+private fun BufferedImage.convertToJpg(dimension: Dimension, fileName: Path): BufferedImage {
     if (fileName.extension.lowercase() in setOf("jpg", "jpeg")) {
         return this
     }
-
-    val outputImage = BufferedImage(width, height, false).graphics {
-        drawImage(image, 0, 0, Color.WHITE, null)
+    val outputImage = BufferedImage(dimension.width, dimension.height, false).graphics {
+        drawImage(this@convertToJpg, 0, 0, Color.WHITE, null)
     }
-    val imageBytes = outputImage.toByteArray("jpg")
-
-    return PDImageXObject.createFromByteArray(document, imageBytes, "${fileName.nameWithoutExtension}.jpg")
+    return outputImage
 }
 
-private fun BufferedImage.removeAlphaChannel(): BufferedImage {
-    if (!colorModel.hasAlpha()) {
-        return this
-    }
-    val target = BufferedImage(width, height, false).graphics {
-        fillRect(0, 0, width, height)
-        drawImage(this@removeAlphaChannel, 0, 0, null)
-    }
-    return target
-}
-
-private fun PDImageXObject.setJpgQuality(
-    jpgCompressFactor: Double,
-    document: PDDocument,
-    fileName: Path,
-): PDImageXObject {
+private fun BufferedImage.setJpgQuality(jpgCompressFactor: Double): BufferedImage {
     val jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next()
     try {
         val jpgWriteParam = jpgWriter.defaultWriteParam.apply {
@@ -183,14 +165,14 @@ private fun PDImageXObject.setJpgQuality(
             compressionQuality = jpgCompressFactor.toFloat()
         }
 
-        val imageBytes = byteArrayOutputStream { baos ->
-            MemoryCacheImageOutputStream(baos).use {
+        val imageBytes = byteArrayOutputStream { outputStream ->
+            MemoryCacheImageOutputStream(outputStream).use {
                 jpgWriter.output = it
-                val outputImage = IIOImage(image, null, null)
+                val outputImage = IIOImage(this, null, null)
                 jpgWriter.write(null, outputImage, jpgWriteParam)
             }
         }
-        return PDImageXObject.createFromByteArray(document, imageBytes, fileName.name)
+        return ImageIO.read(imageBytes.inputStream())
     } finally {
         jpgWriter.dispose()
     }
