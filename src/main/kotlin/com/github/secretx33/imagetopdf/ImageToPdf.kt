@@ -14,10 +14,10 @@ import com.github.secretx33.imagetopdf.util.ANSI_GREEN
 import com.github.secretx33.imagetopdf.util.ANSI_PURPLE
 import com.github.secretx33.imagetopdf.util.ANSI_RESET
 import com.github.secretx33.imagetopdf.util.absoluteParent
+import com.github.secretx33.imagetopdf.util.cpuThreadAmount
 import com.github.secretx33.imagetopdf.util.formattedFileSize
 import com.github.secretx33.imagetopdf.util.formattedSeconds
 import com.github.secretx33.imagetopdf.util.printError
-import com.github.secretx33.imagetopdf.util.threadAmount
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -66,7 +66,7 @@ private suspend fun createPdfs(settings: Settings) {
 private suspend fun createSingleFile(settings: Settings) = withContext(Dispatchers.IO) {
     val pdfFile = createPdfPath(settings.files.first())
     createPdf(pdfFile) {
-        settings.files.asFlow().parMap(threadAmount) { createPdfImage(it, settings) }
+        settings.files.asFlow().parMap(cpuThreadAmount) { createPdfImage(it, settings) }
             .collect {
                 addImage(it, settings)
             }
@@ -75,7 +75,7 @@ private suspend fun createSingleFile(settings: Settings) = withContext(Dispatche
 }
 
 private suspend fun createMultipleFiles(settings: Settings) = withContext(Dispatchers.IO) {
-    settings.files.asFlow().parMap(threadAmount) { picture ->
+    settings.files.asFlow().parMap(cpuThreadAmount) { picture ->
         val pdfFile = createPdfPath(picture)
         createPdf(pdfFile) {
             addImage(createPdfImage(picture, settings), settings)
