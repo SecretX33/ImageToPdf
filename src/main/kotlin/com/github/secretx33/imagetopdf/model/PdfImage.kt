@@ -12,6 +12,8 @@ data class PdfImage(
     val width: Int,
     val height: Int,
     val document: PDDocument,
+    val mirroring: ImageMirroring,
+    val rotation: ImageRotation,
 ) {
     val dimension = Dimension(width, height)
 }

@@ -1,6 +1,10 @@
 package com.github.secretx33.imagetopdf.util
 
+import com.drew.metadata.Metadata
+import com.drew.metadata.exif.ExifIFD0Directory
 import com.github.secretx33.imagetopdf.exception.QuitApplicationException
+import com.github.secretx33.imagetopdf.model.ImageMirroring
+import com.github.secretx33.imagetopdf.model.ImageRotation
 import org.jnativehook.GlobalScreen
 import java.io.ByteArrayOutputStream
 import java.lang.invoke.MethodHandles
@@ -78,4 +82,16 @@ fun <T> lazyNone(block: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE, bloc
 fun byteArrayOutputStream(block: (ByteArrayOutputStream) -> Unit): ByteArray = ByteArrayOutputStream().use {
     block(it)
     it.toByteArray()
+}
+
+val Metadata.imageRotation: ImageRotation get() {
+    val exif = getFirstDirectoryOfType(ExifIFD0Directory::class.java) ?: return ImageRotation.NONE
+    val orientation = exif.getInt(ExifIFD0Directory.TAG_ORIENTATION)
+    return ImageRotation.from(orientation)
+}
+
+val Metadata.imageMirroring: ImageMirroring get() {
+    val exif = getFirstDirectoryOfType(ExifIFD0Directory::class.java) ?: return ImageMirroring.NONE
+    val orientation = exif.getInt(ExifIFD0Directory.TAG_ORIENTATION)
+    return ImageMirroring.from(orientation)
 }

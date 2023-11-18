@@ -1,7 +1,10 @@
 package com.github.secretx33.imagetopdf.convert
 
 import java.awt.Dimension
+import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.sin
 
 /**
  * Associates a new [Dimension] tuple.
@@ -35,7 +38,7 @@ data class DimensionTuple(val original: Dimension, val modified: Dimension) {
  * @param w The dimension's width
  * @param h The dimension's height
  */
-class ScalableDimension(
+class TransformableDimension(
     w: Int,
     h: Int,
     private val scale: Double = 1.0,
@@ -51,7 +54,7 @@ class ScalableDimension(
     constructor(w: Double, h: Double, scale: Double = 1.0) : this(w = w.toInt(), h = h.toInt(), scale = scale)
 
     fun toScaledDimensionTuple(): DimensionTuple {
-        val dimensions = ScalableDimension(width, height, scale)
+        val dimensions = TransformableDimension(width, height, scale)
         return DimensionTuple(dimensions, dimensions.scale())
     }
 
@@ -68,7 +71,10 @@ class ScalableDimension(
         val srcHeight = getHeight()
 
         // Scale both dimensions with respect to the best fit ratio
-        return ScalableDimension((srcWidth * scale).toInt(), (srcHeight * scale).toInt())
+        return TransformableDimension(
+            w = (srcWidth * scale).toInt(),
+            h = (srcHeight * scale).toInt(),
+        )
     }
 
     /**
@@ -88,7 +94,24 @@ class ScalableDimension(
         val ratio = min(desiredDimensions.getWidth() / srcWidth, desiredDimensions.getHeight() / srcHeight)
 
         // Scale both dimensions with respect to the best fit ratio
-        return ScalableDimension((srcWidth * ratio * scale).toInt(), (srcHeight * ratio * scale).toInt())
+        return TransformableDimension(
+            w = (srcWidth * ratio * scale).toInt(),
+            h = (srcHeight * ratio * scale).toInt()
+        )
+    }
+
+    fun rotate(degrees: Double): Dimension {
+        val radian = Math.toRadians(degrees)
+        val sine = abs(sin(radian))
+        val cosine = abs(cos(radian))
+        val rotatedWidth = (getWidth() * cosine + getHeight() * sine).toInt()
+        val rotatedHeight = (getHeight() * cosine + getWidth() * sine).toInt()
+
+        return TransformableDimension(
+            w = rotatedWidth,
+            h = rotatedHeight,
+            scale = scale,
+        )
     }
 
     override fun toString(): String = "(${getWidth()}, ${getHeight()})"

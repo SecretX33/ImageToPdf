@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.github.secretx33"
-version = "0.2.2"
+version = "0.2.3"
 
 val javaVersion = 17
 
@@ -29,6 +29,7 @@ dependencies {
     implementation("org.fusesource.jansi:jansi:2.4.1")
     implementation(platform("io.arrow-kt:arrow-stack:1.2.1"))
     implementation("io.arrow-kt:arrow-fx-coroutines")
+    implementation("com.drewnoakes:metadata-extractor:2.18.0")
 }
 
 kapt {
