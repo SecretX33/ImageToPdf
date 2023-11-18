@@ -1,6 +1,9 @@
 package com.github.secretx33.imagetopdf.convert
 
 import arrow.core.nonFatalOrThrow
+import com.drew.imaging.ImageMetadataReader
+import com.github.secretx33.imagetopdf.model.ImageMirroring
+import com.github.secretx33.imagetopdf.model.ImageRotation
 import com.github.secretx33.imagetopdf.model.PdfImage
 import com.github.secretx33.imagetopdf.model.Settings
 import com.github.secretx33.imagetopdf.util.ANSI_RESET
@@ -9,6 +12,8 @@ import com.github.secretx33.imagetopdf.util.absoluteParent
 import com.github.secretx33.imagetopdf.util.bail
 import com.github.secretx33.imagetopdf.util.byteArrayOutputStream
 import com.github.secretx33.imagetopdf.util.formattedFileSize
+import com.github.secretx33.imagetopdf.util.imageMirroring
+import com.github.secretx33.imagetopdf.util.imageRotation
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
@@ -36,6 +41,8 @@ import java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC
 import java.awt.RenderingHints.VALUE_RENDER_QUALITY
 import java.awt.RenderingHints.VALUE_STROKE_PURE
 import java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON
+import java.awt.geom.AffineTransform
+import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
 import java.awt.image.RenderedImage
 import java.nio.file.Path
@@ -52,6 +59,7 @@ import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
 import kotlin.io.path.outputStream
 
+
 inline fun createPdf(file: Path, block: PDDocument.() -> Unit) = try {
     PDDocument().use { document ->
         document.block()
@@ -67,6 +75,7 @@ inline fun createPdf(file: Path, block: PDDocument.() -> Unit) = try {
 }
 
 fun PDDocument.createPdfImage(picture: Path, settings: Settings): PdfImage = pdfImage(picture)
+    .mirrorAndRotate()
     .resize(settings.imageResizeFactor)
     .compressToJpg(settings.jpgCompressionQuality)
 
@@ -74,7 +83,7 @@ fun PDDocument.addImage(
     pdfImage: PdfImage,
     settings: Settings,
 ) {
-    val scaled = ScalableDimension(pdfImage.width, pdfImage.height, settings.imageRenderFactor).scale()
+    val scaled = TransformableDimension(pdfImage.width, pdfImage.height, settings.imageRenderFactor).scale()
     val page = PDPage(PDRectangle(scaled.getWidth().toFloat(), scaled.getHeight().toFloat()))
         .also(::addPage)
     val image = pdfImage.image.toPDImageXObject(this, pdfImage.fileName)
@@ -86,6 +95,13 @@ fun PDDocument.addImage(
 
 private fun PDDocument.pdfImage(picture: Path): PdfImage {
     val image = ImageIO.read(picture.toFile())
+    val metadata = runCatching { ImageMetadataReader.readMetadata(picture.toFile()) }
+
+    val imageMirror = metadata.mapCatching { it.imageMirroring }
+        .onFailure { println("${ANSI_YELLOW}Warn: could not read image mirroring of file '${picture.name}' at '${picture.absoluteParent}', assuming no mirroring metadata is set$ANSI_RESET") }
+    val imageRotate = metadata.mapCatching { it.imageRotation }
+        .onFailure { println("${ANSI_YELLOW}Warn: could not read image orientation of file '${picture.name}' at '${picture.absoluteParent}', assuming no rotation metadata is set$ANSI_RESET") }
+
     return PdfImage(
         image = image,
         fileName = picture.fileName,
@@ -93,7 +109,75 @@ private fun PDDocument.pdfImage(picture: Path): PdfImage {
         width = image.width,
         height = image.height,
         document = this,
+        mirroring = imageMirror.getOrElse { ImageMirroring.NONE },
+        rotation = imageRotate.getOrElse { ImageRotation.NONE },
     )
+}
+
+private fun PdfImage.mirrorAndRotate(): PdfImage {
+    if (rotation == ImageRotation.NONE && mirroring == ImageMirroring.NONE) {
+        return this
+    }
+    val image = image.mirrorAndRotate(rotation, mirroring)
+    return copy(
+        image = image,
+        width = image.width,
+        height = image.height,
+    )
+}
+
+private fun BufferedImage.mirrorAndRotate(
+    rotation: ImageRotation,
+    mirroring: ImageMirroring,
+): BufferedImage {
+    val dimension = TransformableDimension(width, height)
+    val rotatedDimension = dimension.rotate(rotation.degrees)
+    val affineTransforms = listOfNotNull(
+        mirrorAffineTransform(mirroring, dimension),
+        rotateAffineTransform(rotation, dimension),
+    ).map {
+        AffineTransformOp(it, null)
+    }
+
+    val rotatedImage = BufferedImage(rotatedDimension.width, rotatedDimension.height, colorModel.hasAlpha()) {
+        val transformedImage = affineTransforms.fold(this@mirrorAndRotate) { image, transformOp ->
+            transformOp.filter(image, null)
+        }
+        drawImage(transformedImage, 0, 0, null)
+    }
+    return rotatedImage
+}
+
+private fun rotateAffineTransform(
+    rotation: ImageRotation,
+    dimension: TransformableDimension,
+): AffineTransform? {
+    if (rotation == ImageRotation.NONE) {
+        return null
+    }
+    val rotatedDimension = dimension.rotate(rotation.degrees)
+    return AffineTransform().apply {
+        translate((rotatedDimension.getWidth() - dimension.getWidth()) / 2.0, (rotatedDimension.getHeight() - dimension.getHeight()) / 2.0)
+        rotate(Math.toRadians(rotation.degrees), dimension.getWidth() / 2.0, dimension.getHeight() / 2.0)
+    }
+}
+
+private fun mirrorAffineTransform(
+    mirroring: ImageMirroring,
+    dimension: Dimension,
+): AffineTransform? {
+    if (mirroring == ImageMirroring.NONE) {
+        return null
+    }
+    return AffineTransform().apply {
+        if (mirroring == ImageMirroring.HORIZONTAL) {
+            scale(-1.0, 1.0)
+            translate(-dimension.getWidth(), 0.0)
+        } else {
+            scale(1.0, -1.0)
+            translate(0.0, -dimension.getHeight())
+        }
+    }
 }
 
 private fun PdfImage.resize(factor: Double): PdfImage {
@@ -102,9 +186,9 @@ private fun PdfImage.resize(factor: Double): PdfImage {
     }
     require(factor > 0) { "Invalid factor value (expected > 0, actual: $factor)" }
 
-    val dimensions = ScalableDimension(width, height, factor).toScaledDimensionTuple()
+    val dimensions = TransformableDimension(width, height, factor).toScaledDimensionTuple()
         .let {
-            it.copy(modified = ScalableDimension(
+            it.copy(modified = TransformableDimension(
                 it.modified.getWidth().coerceAtLeast(1.0),
                 it.modified.getHeight().coerceAtLeast(1.0),
             ))
@@ -121,7 +205,7 @@ private fun BufferedImage.resize(dimensionTuple: DimensionTuple): BufferedImage 
     val widthScaled = dimensionTuple.modified.getWidth().toInt()
     val heightScaled = dimensionTuple.modified.getHeight().toInt()
 
-    val resizedImage = BufferedImage(widthScaled, heightScaled, colorModel.hasAlpha()).graphics {
+    val resizedImage = BufferedImage(widthScaled, heightScaled, colorModel.hasAlpha()) {
         setRenderingHints(RENDERING_HINTS)
         transform = transform.apply {
             setToScale(dimensionTuple.widthRatio, dimensionTuple.heightRatio)
@@ -151,7 +235,7 @@ private fun BufferedImage.convertToJpg(dimension: Dimension, fileName: Path): Bu
     if (fileName.extension.lowercase() in setOf("jpg", "jpeg")) {
         return this
     }
-    val outputImage = BufferedImage(dimension.width, dimension.height, false).graphics {
+    val outputImage = BufferedImage(dimension.width, dimension.height, false) {
         drawImage(this@convertToJpg, 0, 0, Color.WHITE, null)
     }
     return outputImage
@@ -172,7 +256,7 @@ private fun BufferedImage.setJpgQuality(jpgCompressFactor: Double): BufferedImag
                 jpgWriter.write(null, outputImage, jpgWriteParam)
             }
         }
-        return ImageIO.read(imageBytes.inputStream())
+        return imageBytes.inputStream().use(ImageIO::read)
     } finally {
         jpgWriter.dispose()
     }
@@ -183,6 +267,17 @@ private fun BufferedImage.toPDImageXObject(
     fileName: Path,
 ): PDImageXObject = PDImageXObject.createFromByteArray(document, toByteArray(fileName.extension), fileName.name)
 
+private fun BufferedImage(
+    width: Int,
+    height: Int,
+    hasAlpha: Boolean,
+    withGraphics: (Graphics2D.() -> Unit)? = null,
+): BufferedImage = BufferedImage(
+    width,
+    height,
+    if (hasAlpha) BufferedImage.TYPE_INT_ARGB else BufferedImage.TYPE_INT_RGB,
+).run { withGraphics?.let(::graphics) ?: this }
+
 private fun <T> BufferedImage.graphics(block: Graphics2D.() -> T): BufferedImage = apply {
     val graphics = createGraphics()
     try {
@@ -191,16 +286,6 @@ private fun <T> BufferedImage.graphics(block: Graphics2D.() -> T): BufferedImage
         graphics.dispose()
     }
 }
-
-private fun BufferedImage(
-    width: Int,
-    height: Int,
-    hasAlpha: Boolean,
-): BufferedImage = BufferedImage(
-    width,
-    height,
-    if (hasAlpha) BufferedImage.TYPE_INT_ARGB else BufferedImage.TYPE_INT_RGB,
-)
 
 private fun RenderedImage.toByteArray(fileExtension: String): ByteArray = byteArrayOutputStream {
     ImageIO.write(this, fileExtension, it)

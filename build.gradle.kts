@@ -29,6 +29,7 @@ dependencies {
     implementation("org.fusesource.jansi:jansi:2.4.1")
     implementation(platform("io.arrow-kt:arrow-stack:1.2.1"))
     implementation("io.arrow-kt:arrow-fx-coroutines")
+    implementation("com.drewnoakes:metadata-extractor:2.18.0")
 }
 
 kapt {
