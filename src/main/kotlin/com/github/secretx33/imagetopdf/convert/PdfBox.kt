@@ -59,7 +59,6 @@ import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
 import kotlin.io.path.outputStream
 
-
 inline fun createPdf(file: Path, block: PDDocument.() -> Unit) = try {
     PDDocument().use { document ->
         document.block()
