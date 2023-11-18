@@ -19,6 +19,7 @@ import org.jnativehook.NativeHookException
 import org.jnativehook.keyboard.NativeKeyEvent
 import org.jnativehook.keyboard.NativeKeyListener
 import picocli.CommandLine
+import java.lang.String.CASE_INSENSITIVE_ORDER
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.Collections
@@ -111,10 +112,10 @@ private fun Settings.sortFiles(): Settings = when {
     else -> this
 }
 
-private val CASE_INSENSITIVE_PATH_COMPARATOR = Comparator<Path> { o1, o2 ->
-    o1.absoluteParent.pathString.compareTo(o2.absoluteParent.pathString, ignoreCase = true)
-}.thenBy { it.nameWithoutExtension }
-    .thenBy { it.name }
+private val CASE_INSENSITIVE_PATH_COMPARATOR = compareBy<Path, String>(CASE_INSENSITIVE_ORDER) {
+    it.absoluteParent.pathString
+}.thenBy(CASE_INSENSITIVE_ORDER) { it.nameWithoutExtension }
+    .thenBy(CASE_INSENSITIVE_ORDER) { it.name }
 
 private fun Iterable<Path>.sortBy(sortFilesBy: SortFilesBy): List<Path> = when (sortFilesBy) {
     SortFilesBy.NAME -> sortedWith(CASE_INSENSITIVE_PATH_COMPARATOR)
