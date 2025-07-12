@@ -11,6 +11,7 @@ import com.github.secretx33.imagetopdf.util.ANSI_RESET
 import com.github.secretx33.imagetopdf.util.absoluteParent
 import com.github.secretx33.imagetopdf.util.bail
 import com.github.secretx33.imagetopdf.util.disableAnnoyingJnativehookLogger
+import com.github.secretx33.imagetopdf.util.formattedDecimal
 import com.github.secretx33.imagetopdf.util.getTextResource
 import com.github.secretx33.imagetopdf.util.quitProgram
 import org.fusesource.jansi.Ansi
@@ -71,8 +72,10 @@ private fun CliParams.validate(): CliParams = apply {
     validateInRange(imageRenderFactor, 0.0..1000000.0) {
         "Invalid argument: image render factor '$imageRenderFactor' is out of bounds (${it.start} ~ ${it.endInclusive})"
     }
-    validateInRange(jpgCompressionQuality, 0.0..1.0) {
-        "Invalid argument: compression value '$jpgCompressionQuality' is out of bounds (${it.start} ~ ${it.endInclusive})"
+    jpgCompressionQualities.forEach { jpgCompressionQuality ->
+        validateInRange(jpgCompressionQuality, 0.0..1.0) {
+            "Invalid argument: JPG compression value '$jpgCompressionQuality' is out of bounds (${it.start} ~ ${it.endInclusive})"
+        }
     }
 }
 
@@ -214,8 +217,8 @@ private fun Settings.printSelectedOptions(): Settings = apply {
     sortFilesBy?.let {
         println("${ANSI_PURPLE}Sort: $ANSI_GREEN${it.displayName}$ANSI_RESET")
     }
-    jpgCompressionQuality?.let {
-        println("${ANSI_PURPLE}JPG compression enabled. Quality: $ANSI_GREEN$it$ANSI_RESET")
+    jpgCompressionQualities.takeIf { it.isNotEmpty() }?.let {
+        println("${ANSI_PURPLE}JPG compression enabled. Quality: $ANSI_GREEN${it.joinToString(", ") { it.formattedDecimal(digits = 2) }}$ANSI_RESET")
     }
     printCurrentFiles(files)
 }

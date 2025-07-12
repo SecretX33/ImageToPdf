@@ -21,8 +21,8 @@ class CliParams {
     @Option(names = ["-i", "--interactive"], description = ["List all files and allow re-order"])
     var isInteractive: Boolean = false
 
-    @Option(names = ["-jq", "--jpg-quality"], arity = "0..1", fallbackValue = "0.75", description = ["Converts the images into JPEG with the provided quality (0.0 ~ 1.0) (disabled by default) (if specified without parameter: \${FALLBACK-VALUE})"])
-    var jpgCompressionQuality: Double? = null
+    @Option(names = ["-jq", "--jpg-quality"], arity = "0..1", fallbackValue = "0.75", description = ["Converts the images into JPEG with the provided quality (0.0 ~ 1.0) (disabled by default) (if specified without parameter: \${FALLBACK-VALUE})", "Repeating this option will instruct the program to test all provided qualities and use the smallest one when converting images to JPEG"])
+    var jpgCompressionQualities: Array<Double> = emptyArray()
 
     @Option(names = ["-s", "--sort"], arity = "0..1", fallbackValue = "NAME", description = ["Sort the given FILE by the specified mode (disabled by default) (if specified without parameter: \${FALLBACK-VALUE})"])
     var sortFilesBy: SortFilesBy? = null
