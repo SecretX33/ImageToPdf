@@ -14,6 +14,7 @@ import com.github.secretx33.imagetopdf.util.byteArrayOutputStream
 import com.github.secretx33.imagetopdf.util.formattedFileSize
 import com.github.secretx33.imagetopdf.util.imageMirroring
 import com.github.secretx33.imagetopdf.util.imageRotation
+import com.github.secretx33.imagetopdf.util.toByteArray
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
@@ -44,7 +45,6 @@ import java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
-import java.awt.image.RenderedImage
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import javax.imageio.IIOImage
@@ -73,10 +73,18 @@ inline fun createPdf(file: Path, block: PDDocument.() -> Unit) = try {
     bail("Error creating file ${file.absolutePathString()}.\n${e.nonFatalOrThrow().stackTraceToString()}")
 }
 
-fun PDDocument.createPdfImage(picture: Path, settings: Settings): PdfImage = pdfImage(picture)
-    .mirrorAndRotate()
-    .resize(settings.imageResizeFactor)
-    .compressToJpg(settings.jpgCompressionQuality)
+fun PDDocument.createPdfImage(picture: Path, settings: Settings): PdfImage {
+    val image = pdfImage(picture)
+        .mirrorAndRotate()
+        .resize(settings.imageResizeFactor)
+
+    return settings.jpgCompressionQualities.ifEmpty { setOf(null) }
+        .associateWith { jpgCompressionQuality ->
+            image.compressToJpg(jpgCompressionQuality)
+        }
+        .minBy { it.value.sizeInBytes }
+        .value
+}
 
 fun PDDocument.addImage(
     pdfImage: PdfImage,
@@ -284,10 +292,6 @@ private fun <T> BufferedImage.graphics(block: Graphics2D.() -> T): BufferedImage
     } finally {
         graphics.dispose()
     }
-}
-
-private fun RenderedImage.toByteArray(fileExtension: String): ByteArray = byteArrayOutputStream {
-    ImageIO.write(this, fileExtension, it)
 }
 
 private val RENDERING_HINTS = mapOf(

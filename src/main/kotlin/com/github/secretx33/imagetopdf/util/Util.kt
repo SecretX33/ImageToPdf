@@ -6,6 +6,7 @@ import com.github.secretx33.imagetopdf.exception.QuitApplicationException
 import com.github.secretx33.imagetopdf.model.ImageMirroring
 import com.github.secretx33.imagetopdf.model.ImageRotation
 import org.jnativehook.GlobalScreen
+import java.awt.image.RenderedImage
 import java.io.ByteArrayOutputStream
 import java.lang.invoke.MethodHandles
 import java.nio.file.Path
@@ -14,6 +15,7 @@ import java.text.DecimalFormatSymbols
 import java.util.Locale
 import java.util.logging.Level
 import java.util.logging.Logger
+import javax.imageio.ImageIO
 import kotlin.io.path.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.fileSize
@@ -65,6 +67,12 @@ fun Duration.formattedSeconds(): String {
     return format.format(secondsDouble)
 }
 
+fun Double.formattedDecimal(digits: Int = 1): String {
+    val pattern = "#${if (digits > 0) ".${"#".repeat(digits)}" else ""}"
+    val format = DecimalFormat(pattern, DecimalFormatSymbols(Locale.US))
+    return format.format(this)
+}
+
 /**
  * Bye bye, annoying `info` logger from JNativeHook.
  */
@@ -77,11 +85,18 @@ fun disableAnnoyingJnativehookLogger() {
     logger.useParentHandlers = false
 }
 
-fun <T> lazyNone(block: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE, block)
-
 fun byteArrayOutputStream(block: (ByteArrayOutputStream) -> Unit): ByteArray = ByteArrayOutputStream().use {
     block(it)
     it.toByteArray()
+}
+
+fun RenderedImage.toByteArray(fileExtension: String): ByteArray = byteArrayOutputStream {
+    ImageIO.write(this, fileExtension, it)
+}
+
+fun RenderedImage.sizeInBytes(fileExtension: String): Long = CountingOutputStream().use {
+    ImageIO.write(this, fileExtension, it)
+    it.byteCount
 }
 
 val Metadata.imageRotation: ImageRotation get() {

@@ -1,9 +1,11 @@
 package com.github.secretx33.imagetopdf.model
 
+import com.github.secretx33.imagetopdf.util.sizeInBytes
 import org.apache.pdfbox.pdmodel.PDDocument
 import java.awt.Dimension
 import java.awt.image.BufferedImage
 import java.nio.file.Path
+import kotlin.io.path.extension
 
 data class PdfImage(
     val image: BufferedImage,
@@ -16,4 +18,5 @@ data class PdfImage(
     val rotation: ImageRotation,
 ) {
     val dimension = Dimension(width, height)
+    val sizeInBytes by lazy { image.sizeInBytes(fileName.extension) }
 }
