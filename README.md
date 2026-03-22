@@ -14,7 +14,7 @@ ImageToPdf is a Kotlin CLI tool that allows you to convert images into PDF files
 
 Download the latest-compiled binary by clicking [HERE](https://github.com/SecretX33/ImageToPdf/releases/latest/download/ImageToPdf.jar).
 
-This is a Java (JVM) project, so remember to install [Java 17](https://adoptium.net/temurin/releases/?version=17) to run it if you don't have it already.
+This is a Java (JVM) project, so remember to install [Java 25](https://adoptium.net/temurin/releases/?version=25) to run it if you don't have it already.
 
 ## Quick Start
 
