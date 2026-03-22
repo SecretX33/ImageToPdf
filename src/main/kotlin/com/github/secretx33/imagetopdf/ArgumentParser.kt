@@ -120,13 +120,16 @@ private val CASE_INSENSITIVE_PATH_COMPARATOR = compareBy<Path, String>(CASE_INSE
 }.thenBy(CASE_INSENSITIVE_ORDER) { it.nameWithoutExtension }
     .thenBy(CASE_INSENSITIVE_ORDER) { it.name }
 
-private fun Iterable<Path>.sortBy(sortFilesBy: SortFilesBy): List<Path> = when (sortFilesBy) {
-    SortFilesBy.NAME -> sortedWith(CASE_INSENSITIVE_PATH_COMPARATOR)
-    SortFilesBy.NAME_DESC -> sortedWith(CASE_INSENSITIVE_PATH_COMPARATOR.reversed())
-    SortFilesBy.CREATED_DATE -> sortedBy { it.attributes.creationTime().toInstant() }
-    SortFilesBy.CREATED_DATE_DESC -> sortedByDescending { it.attributes.creationTime().toInstant() }
-    SortFilesBy.MODIFIED_DATE -> sortedBy { it.attributes.lastModifiedTime().toInstant() }
-    SortFilesBy.MODIFIED_DATE_DESC -> sortedByDescending { it.attributes.lastModifiedTime().toInstant() }
+private fun Iterable<Path>.sortBy(sortFilesBy: SortFilesBy): List<Path> {
+    val comparator = when (sortFilesBy) {
+        SortFilesBy.NAME -> CASE_INSENSITIVE_PATH_COMPARATOR
+        SortFilesBy.NAME_DESC -> CASE_INSENSITIVE_PATH_COMPARATOR.reversed()
+        SortFilesBy.CREATED_DATE -> compareBy { it.attributes.creationTime().toInstant() }
+        SortFilesBy.CREATED_DATE_DESC -> compareByDescending { it.attributes.creationTime().toInstant() }
+        SortFilesBy.MODIFIED_DATE -> compareBy { it.attributes.lastModifiedTime().toInstant() }
+        SortFilesBy.MODIFIED_DATE_DESC -> compareByDescending { it.attributes.lastModifiedTime().toInstant() }
+    }
+    return sortedWith(comparator)
 }
 
 private val Path.attributes: BasicFileAttributes
