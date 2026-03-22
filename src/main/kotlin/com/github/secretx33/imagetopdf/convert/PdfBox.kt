@@ -102,6 +102,7 @@ fun PDDocument.addImage(
 
 private fun PDDocument.pdfImage(picture: Path): PdfImage {
     val image = ImageIO.read(picture.toFile())
+        ?: bail("Error parsing '${picture.name}' at '${picture.absoluteParent}'. Make sure the file is a valid image file (e.g. jpg, png, etc).")
     val metadata = runCatching { ImageMetadataReader.readMetadata(picture.toFile()) }
 
     val imageMirror = metadata.mapCatching { it.imageMirroring }
