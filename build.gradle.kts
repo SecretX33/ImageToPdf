@@ -1,18 +1,19 @@
 import org.graalvm.buildtools.gradle.tasks.BuildNativeImageTask
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("com.github.johnrengelman.shadow") version "8.1.1"
-    kotlin("jvm") version "1.9.10"
-    kotlin("kapt") version "1.9.10"
-    id("org.graalvm.buildtools.native") version "0.9.27"
+    id("com.gradleup.shadow") version "9.4.0"
+    kotlin("jvm") version "2.3.10"
+    kotlin("kapt") version "2.3.10"
+    id("org.graalvm.buildtools.native") version "0.11.5"
     application
 }
 
 group = "com.github.secretx33"
-version = "0.2.4"
+version = "0.2.5"
 
-val javaVersion = 17
+val javaVersion = JvmTarget.JVM_25
 
 repositories {
     mavenCentral()
@@ -20,16 +21,16 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.7.3"))
+    implementation(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.10.2"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
-    implementation("org.apache.pdfbox:pdfbox:3.0.0")
+    implementation("org.apache.pdfbox:pdfbox:3.0.7")
     implementation("com.1stleg:jnativehook:2.1.0")
-    implementation("info.picocli:picocli:4.7.5")
-    kapt("info.picocli:picocli-codegen:4.7.5")
-    implementation("org.fusesource.jansi:jansi:2.4.1")
-    implementation(platform("io.arrow-kt:arrow-stack:1.2.1"))
+    implementation("info.picocli:picocli:4.7.7")
+    kapt("info.picocli:picocli-codegen:4.7.7")
+    implementation("org.fusesource.jansi:jansi:2.4.2")
+    implementation(platform("io.arrow-kt:arrow-stack:2.2.2.1"))
     implementation("io.arrow-kt:arrow-fx-coroutines")
-    implementation("com.drewnoakes:metadata-extractor:2.18.0")
+    implementation("com.drewnoakes:metadata-extractor:2.19.0")
 }
 
 kapt {
@@ -50,15 +51,15 @@ tasks.shadowJar {
 
 tasks.withType<JavaCompile> {
     options.apply {
-        release.set(javaVersion)
+        release = javaVersion.target.toInt()
         options.encoding = "UTF-8"
     }
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions {
+    compilerOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict", "-Xjvm-default=all")
-        jvmTarget = javaVersion.toString()
+        jvmTarget = javaVersion
     }
 }
 
